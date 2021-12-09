@@ -42,20 +42,17 @@ function clearAutomators (): void {
 }
 
 function openTab(tab: string, event: any): void {
-  let i, tabcontent, tablinks;
-
-  tabcontent = document.getElementsByClassName("tabcontent");
-  for (i = 0; i < tabcontent.length; i++) {
-    tabcontent[i].style.display = "none";
+  const tabcontent = document.getElementsByClassName("tabcontent") as HTMLCollectionOf<HTMLElement>
+  for (let i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none"
   }
-
-  tablinks = document.getElementsByClassName("tablinks");
-  for (i = 0; i < tablinks.length; i++) {
-    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  const tablinks = document.getElementsByClassName("tablinks")
+  for (let i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "")
   }
-
-  document.getElementById(tab).style.display = "block";
-  event.currentTarget.className += " active";
+  const tabElement = document.getElementById(tab)
+  if (tabElement) tabElement.style.display = "block"
+  event.currentTarget.className += " active"
 }
 
 function measureLag(): void {
