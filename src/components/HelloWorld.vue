@@ -55,7 +55,7 @@ function saveGameIntermittently(): void {
 async function gameLoop() {
   while (1==1) {
     store.lastCount = store.count
-    store.automators.forEach(automator =>
+    store.automators.forEach((automator: Incrementor) =>
       store.count = automator(store.count as Decimal)
     )
     await new Promise(resolve => setTimeout(resolve, 0))

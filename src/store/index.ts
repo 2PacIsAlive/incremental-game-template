@@ -15,7 +15,7 @@ export const useStore = defineStore('main', {
       lastCount: savedState?.lastCount || new Decimal(0),
       automators: savedState?.automators 
         ? savedState.automators.map((a: string) =>
-            incrementors[a]
+            incrementors[a] as Incrementor
           )
         : <Incrementor[]> [],
       lag: 0
