@@ -9,6 +9,9 @@ export interface Incrementors {
 }
 
 export const incrementors: Incrementors = {
+  sqrt: function (decimal) {
+    return decimal.plus(Decimal.sqrt(decimal))
+  },
   constant: function (decimal) {
     return Decimal.add(1, decimal)
   },
@@ -20,5 +23,8 @@ export const incrementors: Incrementors = {
   },
   exponential: function (decimal) {
     return Decimal.pow(decimal, 2)
+  },
+  superlinearSubquadratic: function (decimal) {
+    return new Decimal(0)
   }
 }

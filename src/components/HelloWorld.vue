@@ -5,61 +5,65 @@ import { Decimal } from 'decimal.js'
 import * as numberformat from 'swarm-numberformat'
 // @ts-ignore
 import { incrementors, Incrementor } from './incrementors'
+// @ts-ignore
+import { useStore } from '../store'
 
 const backend = { backend: 'decimal.js', Decimal: Decimal}
 
 defineProps<{ something: string }>()
 
-const count = ref<Decimal.Value>(new Decimal(0)),
-  lastCount = ref<Decimal.Value>(new Decimal(0)),
+const store = useStore(),
   automatorsToAdd = ref(1),
   incrementType = ref('constant'),
-  automators = ref<Incrementor[]>([]),
-  lag = ref(0),
   formattedCount = computed(() => 
-    numberformat.format(count.value, backend)
+    numberformat.format(store.count, backend)
   ),
   formattedLag = computed(() =>
-    lag.value.toFixed(0).padStart(2, ' ')
+    store.lag.toFixed(0).toString().padStart(4, '0')
   ),
   formattedLastEventLoop = computed(() =>
-    Decimal.sub(count.value as Decimal, lastCount.value as Decimal)
-      .toFixed(0).padStart(2, ' ')
-  )
+    Decimal.sub(store.count as Decimal, store.lastCount as Decimal).toFixed(0)
+  ),
+  saveInterval = 30000
 
 async function increment (): Promise<void> {
-  count.value = await incrementors[incrementType.value](count.value as Decimal)
+  store.count = await incrementors[incrementType.value](store.count as Decimal)
 }
 
 function addAutomators (): void {
   for (let i=0; i<automatorsToAdd.value; i++) {
-    automators.value.push(incrementors[incrementType.value])
+    store.automators.push(incrementors[incrementType.value])
   }
 }
 
 function clearAutomators (): void {
-  automators.value = []
+  store.automators = []
 }
 
-function measureLag(iteration: number): void {
+function measureLag(): void {
   const start = performance.now()
   setTimeout(() => {
-    lag.value = performance.now() - start
-    measureLag(iteration + 1)
+    store.lag = performance.now() - start
+    measureLag()
   })
 }
 
+function saveGameIntermittently(): void {
+  setTimeout(store.save, saveInterval)
+} 
+
 async function gameLoop() {
   while (1==1) {
-    lastCount.value = count.value
-    automators.value.forEach(automator =>
-      count.value = automator(count.value as Decimal)
+    store.lastCount = store.count
+    store.automators.forEach(automator =>
+      store.count = automator(store.count as Decimal)
     )
     await new Promise(resolve => setTimeout(resolve, 0))
   }
 }
 
-measureLag(1)
+measureLag()
+saveGameIntermittently()
 gameLoop()
 </script>
 
@@ -67,7 +71,6 @@ gameLoop()
   <h1>{{ formattedCount }}</h1>
   <p>added during last game loop: {{ formattedLastEventLoop }}</p>
   <p>lag: {{ formattedLag }}ms</p>
-  <button type="button" @click="increment">increment</button>
   <p>
     incrementor:
     <select v-model="incrementType">
@@ -76,29 +79,20 @@ gameLoop()
         :key="index">{{ incrementor }}
       </option>
     </select>
+    <button type="button" @click="increment">increment</button>
   </p>
-    <button type="button" @click="addAutomators">add automator(s)</button>
   <p>
-    number of automators to add:
+    automators to add:
     <input type="number" v-model="automatorsToAdd" />
+    <button type="button" @click="addAutomators">add automator{{ automatorsToAdd > 1 ? 's' : '' }}</button>
   </p>
   <button type="button" @click="clearAutomators">clear automators</button>
+  <button type="button" @click="store.save">save</button>
+  <button type="button" @click="store.reset">reset</button>
 </template>
 
 <style scoped>
-a {
-  color: #42b983;
-}
-
-label {
-  margin: 0 0.5em;
-  font-weight: bold;
-}
-
-code {
-  background-color: #eee;
-  padding: 2px 4px;
-  border-radius: 4px;
-  color: #304455;
+button {
+  margin-left:10px;
 }
 </style>
