@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Decimal } from 'decimal.js'
 // @ts-ignore
 import * as numberformat from 'swarm-numberformat'
@@ -7,6 +7,7 @@ import * as numberformat from 'swarm-numberformat'
 import { incrementors, Incrementor } from './incrementors'
 // @ts-ignore
 import { useStore } from '../store'
+import map from './map'
 
 const backend = { backend: 'decimal.js', Decimal: Decimal}
 
@@ -40,6 +41,23 @@ function clearAutomators (): void {
   store.automators = []
 }
 
+function openTab(tab: string, event: any): void {
+  let i, tabcontent, tablinks;
+
+  tabcontent = document.getElementsByClassName("tabcontent");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+
+  tablinks = document.getElementsByClassName("tablinks");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+
+  document.getElementById(tab).style.display = "block";
+  event.currentTarget.className += " active";
+}
+
 function measureLag(): void {
   const start = performance.now()
   setTimeout(() => {
@@ -62,37 +80,107 @@ async function gameLoop() {
   }
 }
 
+onMounted(() => {
+  document.getElementById('defaulttab')?.click()
+})
+
 measureLag()
 saveGameIntermittently()
 gameLoop()
 </script>
 
 <template>
-  <h1>{{ formattedCount }}</h1>
-  <p>added during last game loop: {{ formattedLastEventLoop }}</p>
-  <p>lag: {{ formattedLag }}ms</p>
-  <p>
-    incrementor:
-    <select v-model="incrementType">
-      <option 
-        v-for="(incrementor, index) in Object.keys(incrementors)"
-        :key="index">{{ incrementor }}
-      </option>
-    </select>
-    <button type="button" @click="increment">increment</button>
-  </p>
-  <p>
-    automators to add:
-    <input type="number" v-model="automatorsToAdd" />
-    <button type="button" @click="addAutomators">add automator{{ automatorsToAdd > 1 ? 's' : '' }}</button>
-  </p>
-  <button type="button" @click="clearAutomators">clear automators</button>
-  <button type="button" @click="store.save">save</button>
-  <button type="button" @click="store.reset">reset</button>
+  <div class="tab">
+    <button class="tablinks" @click="openTab('count', $event)" id="defaulttab">Count</button>
+    <button class="tablinks" @click="openTab('map', $event)">Map</button>
+  </div>
+
+  <div id="count" class="tabcontent">
+    <h1>{{ formattedCount }}</h1>
+    <p>added during last game loop: {{ formattedLastEventLoop }}</p>
+    <p>lag: {{ formattedLag }}ms</p>
+    <p>
+      incrementor:
+      <select v-model="incrementType">
+        <option 
+          v-for="(incrementor, index) in Object.keys(incrementors)"
+          :key="index">{{ incrementor }}
+        </option>
+      </select>
+      <button type="button" @click="increment">increment</button>
+    </p>
+    <p>
+      automators to add:
+      <input type="number" v-model="automatorsToAdd" />
+      <button type="button" @click="addAutomators">add automator{{ automatorsToAdd > 1 ? 's' : '' }}</button>
+    </p>
+    <button type="button" @click="clearAutomators">clear automators</button>
+  </div>
+
+  <div id="map" class="tabcontent">
+   <pre><code>{{map}}</code></pre>
+  </div>
+
+  <div id="globalcontrols">
+    <button type="button" @click="store.save">save</button>
+    <button type="button" @click="store.reset">reset</button>
+  </div>
 </template>
 
 <style scoped>
+#globalcontrols {
+  padding-top: 10px;
+} 
+
 button {
   margin-left:10px;
+}
+
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+}
+
+.tab button:hover {
+  background-color: #ddd;
+}
+
+.tab button.active {
+  background-color: #ccc;
+}
+
+.tabcontent {
+  display: none;
+  padding: 2px 50px 50px;
+  border: 1px solid #ccc;
+  border-top: none;
+}
+
+.tabcontent {
+  animation: fadeEffect 1s; /* Fading effect takes 1 second */
+}
+
+/* Go from zero to full opacity */
+@keyframes fadeEffect {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+
+code {
+  /* background-color: #eee; */
+  padding: 0px 0px;
+  border-radius: 0px;
+  /* color: #304455; */
 }
 </style>
