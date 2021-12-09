@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { Decimal } from 'decimal.js'
-import { Incrementor } from '../components/incrementors'
+import { Incrementor, incrementors } from '../components/incrementors'
 
 export const useStore = defineStore('main', {
   // arrow function recommended for full type inference
@@ -13,7 +13,11 @@ export const useStore = defineStore('main', {
     return {
       count: savedState?.count || new Decimal(0),
       lastCount: savedState?.lastCount || new Decimal(0),
-      automators: <Incrementor[]> [],
+      automators: savedState?.automators 
+        ? savedState.automators.map((a: string) =>
+            incrementors[a]
+          )
+        : <Incrementor[]> [],
       lag: 0
     }
   },
@@ -22,6 +26,8 @@ export const useStore = defineStore('main', {
       localStorage.setItem('save', JSON.stringify({
         count: this.count,
         lastCount: this.lastCount,
+        automators: this.automators
+          .map((a: Incrementor) => a.name)
       }))
     },
     reset () {
