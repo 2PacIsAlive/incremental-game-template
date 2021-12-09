@@ -34,6 +34,7 @@ export const useStore = defineStore('main', {
       localStorage.removeItem('save')
       this.count = new Decimal(0)
       this.lastCount = new Decimal(0)
+      this.automators = []
     }
   },
 })
