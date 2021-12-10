@@ -9,10 +9,10 @@ const height = 31
 
 const player = '@'
 
-window.addEventListener('keyup', doCommand)
+window.addEventListener('keydown', doCommand)
 
 onUnmounted(() => {
-	window.removeEventListener('keyup', doCommand)
+	window.removeEventListener('keydown', doCommand)
 })
 
 const directions: any = {
