@@ -24,7 +24,4 @@ export const incrementors: Incrementors = {
   exponential: function (decimal) {
     return Decimal.pow(decimal, 2)
   },
-  superlinearSubquadratic: function (decimal) {
-    return new Decimal(0)
-  }
 }

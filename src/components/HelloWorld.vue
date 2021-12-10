@@ -110,12 +110,12 @@ gameLoop()
           :key="index">{{ incrementor }}
         </option>
       </select>
-      <button type="button" @click="increment">increment</button>
+      <button class="button-with-margin" type="button" @click="increment">increment</button>
     </p>
     <p>
       automators to add:
       <input type="number" v-model="automatorsToAdd" />
-      <button type="button" @click="addAutomators">add automator{{ automatorsToAdd > 1 ? 's' : '' }}</button>
+      <button class="button-with-margin" type="button" @click="addAutomators">add automator{{ automatorsToAdd > 1 ? 's' : '' }}</button>
     </p>
     <button type="button" @click="clearAutomators">clear automators</button>
   </div>
@@ -125,12 +125,8 @@ gameLoop()
   </div>
 
   <div id="globalcontrols">
-    <button type="button" @click="saveGame">save</button>
-    <button type="button" @click="store.reset">reset</button>
-  </div>
-
-  <div id="notifications">
-    <p v-if="displaySavedNotification" id="savednotification">saved</p>
+    <button class="button-with-margin" type="button" @click="saveGame">save</button>
+    <button class="button-with-margin" type="button" @click="store.reset">reset</button>
   </div>
 </template>
 
@@ -139,11 +135,7 @@ gameLoop()
   padding-top: 10px;
 } 
 
-#savednotification {
-  color: green;
-}
-
-button {
+.button-with-margin {
   margin-left:10px;
 }
 

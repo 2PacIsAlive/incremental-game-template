@@ -16,14 +16,10 @@ onUnmounted(() => {
 })
 
 const directions: any = {
-  'w': 'U',
-  '&': 'U',
-  'a': 'L',
-  '%': 'L',
-  's': 'D',
-  '(': 'D',
-  'd': 'R',
-  '\'': 'R'
+  'w': 'U', '&': 'U',
+  'a': 'L', '%': 'L',
+  's': 'D', '(': 'D',
+  'd': 'R', '\'': 'R'
 }
 
 function isLegalMove (char: string): boolean {
@@ -71,7 +67,6 @@ function doCommand(e: any) {
       console.warn('illegal', nextChar)
     }
   }
-  // do stuff
 }
 </script>
 
