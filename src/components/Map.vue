@@ -34,12 +34,26 @@ function isStar (char: string): boolean {
   return char === '*'
 }
 
+function isPortal (char: string): boolean {
+  return char.toLowerCase() === 'p'
+}
+
+// NOTE: will always teleport to the right of the exit portal so that it doesn't get overwritten
+function nextPortal (char: string): number {
+  if (char === 'p') return store.map.indexOf('P') + 1
+  else return store.map.indexOf('p') + 1
+}
+
+function movePlayer (current: number, next: number): void {
+  store.map = store.map.substring(0, next) + player + store.map.substring(next + 1)
+  store.map = store.map.substring(0, current) + ' ' + store.map.substring(current + 1)  
+}
+
 function doCommand(e: any) {
   const cmd = directions[String.fromCharCode(e.keyCode).toLowerCase()]
   if (cmd) {
     const current = store.map.indexOf(player)
     let next: number = current
-    console.log('current', current)
     if (cmd === 'U')
       next = current - width - 1
     else if (cmd === 'D')
@@ -48,13 +62,13 @@ function doCommand(e: any) {
       next = current - 1
     else if (cmd === 'R')
       next = current + 1
-    // console.log('next', next, store.map[next])
-    if (isLegalMove(store.map[next])) {
-      if (isStar(store.map[next])) store.stars += 1
-      store.map = store.map.substring(0, next) + player + store.map.substring(next + 1)
-      store.map = store.map.substring(0, current) + ' ' + store.map.substring(current + 1)      
+    const nextChar = store.map[next]
+    if (isLegalMove(nextChar)) {
+      if (isStar(nextChar)) store.stars += 1
+      if (isPortal(nextChar)) next = nextPortal(nextChar)
+      movePlayer(current, next)    
     } else {
-      console.warn('illegal', store.map[next])
+      console.warn('illegal', nextChar)
     }
   }
   // do stuff

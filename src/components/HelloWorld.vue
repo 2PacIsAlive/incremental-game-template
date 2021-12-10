@@ -94,8 +94,8 @@ gameLoop()
 
 <template>
   <div class="tab">
-    <button class="tablinks" @click="openTab('count', $event)" id="defaulttab">Count</button>
-    <button class="tablinks" @click="openTab('map', $event)">Map</button>
+    <button class="tablinks" @click="openTab('count', $event)" id="defaulttab">count</button>
+    <button class="tablinks" @click="openTab('map', $event)">map</button>
   </div>
 
   <div id="count" class="tabcontent">
