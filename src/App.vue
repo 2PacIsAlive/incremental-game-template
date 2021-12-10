@@ -3,11 +3,20 @@
 // Check out https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup
 // @ts-ignore
 import HelloWorld from './components/HelloWorld.vue'
+
+import { useStore } from './store'
+
+const store = useStore()
 </script>
 
 <template>
   <div class="app">
-    <HelloWorld something="anything" />
+    <div id="content-wrap">
+      <HelloWorld something="anything" />
+    </div>
+    <footer id="footer">
+      <p id="saveddisplay" v-if="store.displaySaved">game saved</p>
+    </footer>
   </div>
 </template>
 
@@ -22,5 +31,20 @@ import HelloWorld from './components/HelloWorld.vue'
   align-items: center;
   justify-content: center;
   height: 100vh;
+}
+
+#content-wrap {
+  flex: 1
+}
+
+#footer {
+  position: absolute;
+  bottom: 8px;
+  right: 16px;
+  font-size: 18px;
+}
+
+#saveddisplay {
+  color: green;
 }
 </style>

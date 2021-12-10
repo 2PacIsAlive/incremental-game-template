@@ -18,7 +18,8 @@ export const useStore = defineStore('main', {
             incrementors[a] as Incrementor
           )
         : <Incrementor[]> [],
-      lag: 0
+      lag: 0,
+      displaySaved: false,
     }
   },
   actions: {

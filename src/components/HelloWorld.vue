@@ -16,6 +16,7 @@ defineProps<{ something: string }>()
 const store = useStore(),
   automatorsToAdd = ref(1),
   incrementType = ref('constant'),
+  displaySavedNotification = ref(false),
   formattedCount = computed(() => 
     numberformat.format(store.count, backend)
   ),
@@ -25,7 +26,7 @@ const store = useStore(),
   formattedLastEventLoop = computed(() =>
     Decimal.sub(store.count as Decimal, store.lastCount as Decimal).toFixed(0)
   ),
-  saveInterval = 30000
+  saveInterval = 10000
 
 async function increment (): Promise<void> {
   store.count = await incrementors[incrementType.value](store.count as Decimal)
@@ -63,8 +64,14 @@ function measureLag(): void {
   })
 }
 
+function saveGame(): void {
+  store.save()
+  store.displaySaved = true
+  setTimeout(() => store.displaySaved = false, 2000)
+}
+
 function saveGameIntermittently(): void {
-  setTimeout(store.save, saveInterval)
+  setInterval(saveGame, saveInterval)
 } 
 
 async function gameLoop() {
@@ -119,8 +126,12 @@ gameLoop()
   </div>
 
   <div id="globalcontrols">
-    <button type="button" @click="store.save">save</button>
+    <button type="button" @click="saveGame">save</button>
     <button type="button" @click="store.reset">reset</button>
+  </div>
+
+  <div id="notifications">
+    <p v-if="displaySavedNotification" id="savednotification">saved</p>
   </div>
 </template>
 
@@ -128,6 +139,10 @@ gameLoop()
 #globalcontrols {
   padding-top: 10px;
 } 
+
+#savednotification {
+  color: green;
+}
 
 button {
   margin-left:10px;
