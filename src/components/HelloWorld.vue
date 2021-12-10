@@ -3,11 +3,10 @@ import { ref, computed, onMounted } from 'vue'
 import { Decimal } from 'decimal.js'
 // @ts-ignore
 import * as numberformat from 'swarm-numberformat'
-// @ts-ignore
 import { incrementors, Incrementor } from './incrementors'
-// @ts-ignore
 import { useStore } from '../store'
-import map from './map'
+// @ts-ignore
+import Map from './Map.vue'
 
 const backend = { backend: 'decimal.js', Decimal: Decimal}
 
@@ -122,7 +121,7 @@ gameLoop()
   </div>
 
   <div id="map" class="tabcontent">
-   <pre><code>{{map}}</code></pre>
+   <Map />
   </div>
 
   <div id="globalcontrols">
