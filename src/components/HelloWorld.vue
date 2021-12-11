@@ -125,7 +125,7 @@ gameLoop()
   </div>
 
   <div id="globalcontrols">
-    <button class="button-with-margin" type="button" @click="saveGame">save</button>
+    <button type="button" @click="saveGame">save</button>
     <button class="button-with-margin" type="button" @click="store.reset">reset</button>
   </div>
 </template>
@@ -171,10 +171,9 @@ gameLoop()
 }
 
 .tabcontent {
-  animation: fadeEffect 1s; /* Fading effect takes 1 second */
+  animation: fadeEffect 1s;
 }
 
-/* Go from zero to full opacity */
 @keyframes fadeEffect {
   from {opacity: 0;}
   to {opacity: 1;}

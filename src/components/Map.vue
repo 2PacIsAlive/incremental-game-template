@@ -8,6 +8,10 @@ const width = 59
 const height = 31
 
 const player = '@'
+const playerDefaultLocation = 1172
+const ai = 'L'
+
+let lastAiDirection = 'D'
 
 window.addEventListener('keydown', doCommand)
 
@@ -15,15 +19,21 @@ onUnmounted(() => {
 	window.removeEventListener('keydown', doCommand)
 })
 
-const directions: any = {
+const directionKeys: any = {
   'w': 'U', '&': 'U',
   'a': 'L', '%': 'L',
   's': 'D', '(': 'D',
   'd': 'R', '\'': 'R'
 }
 
+const directions: string[] = Object.values(directionKeys)
+
 function isLegalMove (char: string): boolean {
   return !(['│','┌','┐','└','┘','─'].includes(char))
+}
+
+function isPlayer (char: string): boolean {
+  return char === player
 }
 
 function isStar (char: string): boolean {
@@ -40,39 +50,69 @@ function nextPortal (char: string): number {
   else return store.map.indexOf('p') + 1
 }
 
-function movePlayer (current: number, next: number): void {
-  store.map = store.map.substring(0, next) + player + store.map.substring(next + 1)
+function moveEntity (entity: string, current: number, next: number): void {
+  store.map = store.map.substring(0, next) + entity + store.map.substring(next + 1)
   store.map = store.map.substring(0, current) + ' ' + store.map.substring(current + 1)  
 }
 
+function findNextMove (entity: string, direction: string) {
+  const current: number = store.map.indexOf(entity)
+  let next: number = current
+  if (direction === 'U')
+    next = current - width - 1
+  else if (direction === 'D')
+    next = current + width + 1
+  else if (direction === 'L')
+    next = current - 1
+  else if (direction === 'R')
+    next = current + 1
+  const nextChar = store.map[next]
+  return { current, next, nextChar }
+}
+
+// TODO what is e type
 function doCommand(e: any) {
-  const cmd = directions[String.fromCharCode(e.keyCode).toLowerCase()]
-  if (cmd) {
-    const current = store.map.indexOf(player)
-    let next: number = current
-    if (cmd === 'U')
-      next = current - width - 1
-    else if (cmd === 'D')
-      next = current + width + 1
-    else if (cmd === 'L')
-      next = current - 1
-    else if (cmd === 'R')
-      next = current + 1
-    const nextChar = store.map[next]
+  const direction = directionKeys[String.fromCharCode(e.keyCode).toLowerCase()]
+  if (direction) {
+    let { current, next, nextChar } = findNextMove(player, direction)
     if (isLegalMove(nextChar)) {
       if (isStar(nextChar)) store.stars += 1
       if (isPortal(nextChar)) next = nextPortal(nextChar)
-      movePlayer(current, next)    
-    } else {
-      console.warn('illegal', nextChar)
+      moveEntity(player, current, next)    
     }
   }
 }
+
+async function moveAi() {
+  while (1==1) {
+    let direction = lastAiDirection
+    if (Math.random() > .8) { // most of the time, try to go the same direction as the last move
+      direction = directions[Math.floor(Math.random() * directions.length)]
+      lastAiDirection = direction
+    }
+    let { current, next, nextChar } = findNextMove(ai, direction)
+    if (isPlayer(nextChar)) {
+      alert('YOU DIED')
+      store.deaths += 1
+      moveEntity(player, current, playerDefaultLocation)
+    }
+    if (isLegalMove(nextChar)) {
+      if (isStar(nextChar)) store.aiStars += 1
+      if (isPortal(nextChar)) next = nextPortal(nextChar)
+      moveEntity(ai, current, next)
+    }
+    await new Promise(resolve => setTimeout(resolve, 0))
+  }
+}
+
+moveAi()
 </script>
 
 <template>
   <pre><code>{{store.map}}</code></pre>
+  <p>deaths: {{store.deaths}}</p>
   <p>stars: {{store.stars}}</p>
+  <p>ai stars: {{store.aiStars}}</p>
 </template>
 
 <style scoped>
