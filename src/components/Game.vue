@@ -151,7 +151,7 @@ gameLoop()
   border: none;
   outline: none;
   cursor: pointer;
-  padding: 14px 16px;
+  padding: 12px 16px;
   transition: 0.3s;
 }
 
@@ -165,7 +165,7 @@ gameLoop()
 
 .tabcontent {
   display: none;
-  padding: 2px 50px 50px;
+  padding: 2px 20px 10px;
   border: 1px solid #ccc;
   border-top: none;
 }
@@ -185,4 +185,5 @@ code {
   border-radius: 0px;
   /* color: #304455; */
 }
+
 </style>

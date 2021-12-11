@@ -2,8 +2,8 @@ import { defineStore } from 'pinia'
 import { Decimal } from 'decimal.js'
 import { Incrementor, incrementors } from '../components/incrementors'
 
-const defaultMap = `
-┌─────────────────────────────────────────────────────────┐
+const defaultMap =
+`┌─────────────────────────────────────────────────────────┐
 │  *                         *                            │
 │ ┌──────────────┐  ┌───────────────────────────────────┐ │
 │ │              │  │                                 * │ │
@@ -33,8 +33,7 @@ const defaultMap = `
 │ │           *│  │*                     │P │*         │  │
 │ └────────────┘  └──────────────────────┘  └──────────┘  │
 │                            *                            │
-└─────────────────────────────────────────────────────────┘
-`
+└─────────────────────────────────────────────────────────┘`
 
 export const useStore = defineStore('main', {
   // arrow function recommended for full type inference

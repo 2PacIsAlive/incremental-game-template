@@ -2,7 +2,7 @@
 // This starter template is using Vue 3 <script setup> SFCs
 // Check out https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup
 // @ts-ignore
-import HelloWorld from './components/HelloWorld.vue'
+import Game from './components/Game.vue'
 
 import { useStore } from './store'
 
@@ -12,7 +12,7 @@ const store = useStore()
 <template>
   <div class="app">
     <div id="content-wrap">
-      <HelloWorld something="anything" />
+      <Game something="anything" />
     </div>
     <footer id="footer">
       <p id="saveddisplay" v-if="store.displaySaved">game saved</p>

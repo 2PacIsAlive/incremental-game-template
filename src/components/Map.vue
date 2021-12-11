@@ -110,7 +110,7 @@ moveAi()
 </script>
 
 <template>
-  <pre><code>{{store.map}}</code></pre>
+  <pre>{{store.map}}</pre>
   <p>deaths: {{store.deaths}}</p>
   <p>stars: {{store.stars}}</p>
   <p>ai stars: {{store.aiStars}}</p>
@@ -121,10 +121,5 @@ moveAi()
 </template>
 
 <style scoped>
-code {
-  /* background-color: #eee; */
-  padding: 0px 0px;
-  border-radius: 0px;
-  /* color: #304455; */
-}
+
 </style>
