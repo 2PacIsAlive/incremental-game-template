@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onUnmounted } from 'vue'
+import { onUnmounted, ref } from 'vue'
 import { useStore } from '../store'
 
 const store = useStore()
@@ -10,6 +10,7 @@ const height = 31
 const player = '@'
 const playerDefaultLocation = 1172
 const ai = 'L'
+const aiSpeed = ref(50)
 
 let lastAiDirection = 'D'
 
@@ -101,7 +102,7 @@ async function moveAi() {
       if (isPortal(nextChar)) next = nextPortal(nextChar)
       moveEntity(ai, current, next)
     }
-    await new Promise(resolve => setTimeout(resolve, 0))
+    await new Promise(resolve => setTimeout(resolve, 100 - aiSpeed.value))
   }
 }
 
@@ -113,6 +114,10 @@ moveAi()
   <p>deaths: {{store.deaths}}</p>
   <p>stars: {{store.stars}}</p>
   <p>ai stars: {{store.aiStars}}</p>
+  <p>
+    ai speed:
+    <input type="range" min="0" max="100" class="slider" id="aispeed" v-model="aiSpeed">
+  </p>
 </template>
 
 <style scoped>
