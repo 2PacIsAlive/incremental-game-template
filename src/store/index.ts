@@ -75,13 +75,7 @@ export const useStore = defineStore('main', {
     },
     reset () {
       localStorage.removeItem('save')
-      this.count = new Decimal(0)
-      this.lastCount = new Decimal(0)
-      this.automators = []
-      this.map = defaultMap
-      this.stars = 0
-      this.aiStars = 0
-      this.deaths = 0
+      this.$reset()
     },
   },
 })
