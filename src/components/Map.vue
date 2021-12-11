@@ -1,16 +1,26 @@
 <script setup lang="ts">
-import { onUnmounted, ref } from 'vue'
+import { onUnmounted, ref, watch } from 'vue'
 import { useStore } from '../store'
+import { storeToRefs } from 'pinia'
 
 const store = useStore()
+const { count } = storeToRefs(store)
 
 const width = 59
 const height = 31
 
+const exitSpace = 1798
+const exit = 'e'
+
 const player = '@'
 const playerDefaultLocation = 1172
+const playerIllegalMoves: string[] = []
+
 const ai = 'L'
 const aiSpeed = ref(50)
+const aiIllegalMoves: string[] = [ 
+  exit,
+]
 
 const starSpawnInterval = 3000
 
@@ -31,8 +41,9 @@ const directionKeys: any = {
 
 const directions: string[] = Object.values(directionKeys)
 
-function isLegalMove (char: string): boolean {
-  return !(['│','┌','┐','└','┘','─'].includes(char))
+function isLegalMove (char: string, extraIllegals: string[]): boolean {
+  return !(['│','┌','┐','└','┘','─'].concat(extraIllegals)
+    .includes(char))
 }
 
 function isPlayer (char: string): boolean {
@@ -45,6 +56,10 @@ function isStar (char: string): boolean {
 
 function isPortal (char: string): boolean {
   return char.toLowerCase() === 'p'
+}
+
+function isExit (char: string): boolean {
+  return char === exit
 }
 
 // NOTE: will always teleport to the right of the exit portal so that it doesn't get overwritten
@@ -82,12 +97,48 @@ function doCommand(e: any) {
   const direction = directionKeys[String.fromCharCode(e.keyCode).toLowerCase()]
   if (direction) {
     let { current, next, nextChar } = findNextMove(player, direction)
-    if (isLegalMove(nextChar)) {
+    if (isLegalMove(nextChar, playerIllegalMoves)) {
       if (isStar(nextChar)) store.stars += 1
       if (isPortal(nextChar)) next = nextPortal(nextChar)
-      moveEntity(player, current, next)    
+      if (isExit(nextChar)) nextMap()
+      else moveEntity(player, current, next)    
     }
   }
+}
+
+function nextMap () {
+  store.map = 
+`┌─────────────────────────────────────────────────────────┐
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                             @                           │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+│                                                         │
+└─────────────────────────────────────────────────────────┘`
 }
 
 async function moveAi() {
@@ -103,7 +154,7 @@ async function moveAi() {
       store.deaths += 1
       moveEntity(player, current, playerDefaultLocation)
     }
-    if (isLegalMove(nextChar)) {
+    if (isLegalMove(nextChar, aiIllegalMoves)) {
       if (isStar(nextChar)) store.aiStars += 1
       if (isPortal(nextChar)) next = nextPortal(nextChar)
       moveEntity(ai, current, next)
@@ -132,6 +183,12 @@ function spawnNewStar(): void {
 function spawnNewStarsIntermittently (): void {
   setInterval(spawnNewStar, starSpawnInterval)
 }
+
+watch(count, (count: number, prevCount: number) => {
+  if (count >= 1000000 && prevCount < 1000000) {
+    setSpace(exit, exitSpace)
+  }
+})
 
 spawnNewStarsIntermittently()
 moveAi()
