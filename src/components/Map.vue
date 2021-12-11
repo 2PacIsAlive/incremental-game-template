@@ -12,6 +12,8 @@ const playerDefaultLocation = 1172
 const ai = 'L'
 const aiSpeed = ref(50)
 
+const starSpawnInterval = 3000
+
 let lastAiDirection = 'D'
 
 window.addEventListener('keydown', doCommand)
@@ -51,9 +53,13 @@ function nextPortal (char: string): number {
   else return store.map.indexOf('p') + 1
 }
 
+function setSpace (char: string, location: number): void {
+  store.map = store.map.substring(0, location) + char + store.map.substring(location + 1)
+}
+
 function moveEntity (entity: string, current: number, next: number): void {
-  store.map = store.map.substring(0, next) + entity + store.map.substring(next + 1)
-  store.map = store.map.substring(0, current) + ' ' + store.map.substring(current + 1)  
+  setSpace(entity, next)
+  setSpace(' ', current)  
 }
 
 function findNextMove (entity: string, direction: string) {
@@ -106,6 +112,28 @@ async function moveAi() {
   }
 }
 
+function randomSpace(): number {
+    const min = Math.ceil(width + 1)
+    const max = Math.floor(store.map.length - width - 1)
+    return Math.floor(Math.random() * (max - min + 1)) + min
+}
+
+function spawnNewStar(): void {
+  let foundAvailableSpace, space
+  while (!foundAvailableSpace) {
+    space = randomSpace()
+    if (store.map[space] === ' ') {
+      setSpace('*', space)
+      foundAvailableSpace = true
+    }
+  }
+}
+
+function spawnNewStarsIntermittently (): void {
+  setInterval(spawnNewStar, starSpawnInterval)
+}
+
+spawnNewStarsIntermittently()
 moveAi()
 </script>
 
