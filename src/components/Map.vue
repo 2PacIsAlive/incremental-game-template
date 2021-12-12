@@ -18,6 +18,7 @@ const playerIllegalMoves: string[] = []
 
 const ai = 'L'
 const aiSpeed = ref(50)
+let aiExists = true
 const aiIllegalMoves: string[] = [ 
   exit,
 ]
@@ -109,7 +110,7 @@ function doCommand(e: any) {
 function nextMap () {
   store.map = 
 `┌─────────────────────────────────────────────────────────┐
-│                                                         │
+│ P                                                     L │
 │                                                         │
 │                                                         │
 │                                                         │
@@ -137,29 +138,33 @@ function nextMap () {
 │                                                         │
 │                                                         │
 │                                                         │
-│                                                         │
+│ p                                                       │
 └─────────────────────────────────────────────────────────┘`
 }
 
 async function moveAi() {
-  while (1==1) {
-    let direction = lastAiDirection
-    if (Math.random() > .8) { // most of the time, try to go the same direction as the last move
-      direction = directions[Math.floor(Math.random() * directions.length)]
-      lastAiDirection = direction
+  while (aiExists) {
+    if (store.map.indexOf(ai) !== -1) {
+      let direction = lastAiDirection
+      if (Math.random() > .8) { // most of the time, try to go the same direction as the last move
+        direction = directions[Math.floor(Math.random() * directions.length)]
+        lastAiDirection = direction
+      }
+      let { current, next, nextChar } = findNextMove(ai, direction)
+      if (isPlayer(nextChar)) {
+        alert('YOU DIED')
+        store.deaths += 1
+        moveEntity(player, current, playerDefaultLocation)
+      }
+      if (isLegalMove(nextChar, aiIllegalMoves)) {
+        if (isStar(nextChar)) store.aiStars += 1
+        if (isPortal(nextChar)) next = nextPortal(nextChar)
+        moveEntity(ai, current, next)
+      }
+      await new Promise(resolve => setTimeout(resolve, 100 - aiSpeed.value))
+    } else {
+      aiExists = false
     }
-    let { current, next, nextChar } = findNextMove(ai, direction)
-    if (isPlayer(nextChar)) {
-      alert('YOU DIED')
-      store.deaths += 1
-      moveEntity(player, current, playerDefaultLocation)
-    }
-    if (isLegalMove(nextChar, aiIllegalMoves)) {
-      if (isStar(nextChar)) store.aiStars += 1
-      if (isPortal(nextChar)) next = nextPortal(nextChar)
-      moveEntity(ai, current, next)
-    }
-    await new Promise(resolve => setTimeout(resolve, 100 - aiSpeed.value))
   }
 }
 
