@@ -54,4 +54,8 @@ body, html {
 #saveddisplay {
   color: green;
 }
+
+.button-with-margin {
+  margin-left:10px;
+}
 </style>

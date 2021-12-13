@@ -3,13 +3,21 @@ import { onUnmounted, ref, watch } from 'vue'
 import { useStore } from '../store'
 import { storeToRefs } from 'pinia'
 import { useSound } from '@vueuse/sound'
-import chirpSfx from '../assets/chirp.mp3'
+import sfx from '../assets/sfx.mp3'
 
 const store = useStore()
 const { count } = storeToRefs(store)
 
 const playbackRate = ref(1)
-const { play, sound } = useSound(chirpSfx, { playbackRate })
+const { play, sound } = useSound(sfx, { 
+  sprite: {
+    star: [0, 600],
+    portal: [1000, 400],
+    nextMap: [2000, 4000],
+    death: [7000, 6000],
+  },
+  playbackRate,
+})
 
 const width = 59
 const height = 31
@@ -106,10 +114,13 @@ function doCommand(e: any) {
     if (isLegalMove(nextChar, playerIllegalMoves)) {
       if (isStar(nextChar)) {
         store.stars += 1
-        play()
+        play({id: 'star'})
         if (playbackRate.value < 4) playbackRate.value += 0.01
       }
-      if (isPortal(nextChar)) next = nextPortal(nextChar)
+      if (isPortal(nextChar)) {
+        next = nextPortal(nextChar)
+        play({id: 'portal'})
+      }
       if (isExit(nextChar)) nextMap()
       else moveEntity(player, current, next)    
     }
@@ -117,6 +128,7 @@ function doCommand(e: any) {
 }
 
 function nextMap () {
+  play({id: 'nextMap'})
   store.map = 
 `┌─────────────────────────────────────────────────────────┐
 │ P                                                     L │
@@ -161,6 +173,7 @@ async function moveAi() {
       }
       let { current, next, nextChar } = findNextMove(ai, direction)
       if (isPlayer(nextChar)) {
+        play({id: 'death'})
         alert('YOU DIED')
         store.deaths += 1
         moveEntity(player, current, playerDefaultLocation)
