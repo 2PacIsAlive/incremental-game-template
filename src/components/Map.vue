@@ -39,6 +39,7 @@ const aiIllegalMoves: string[] = [
 const starSpawnInterval = 3000
 
 let lastAiDirection = 'D'
+const aiPath = ref([])
 
 window.addEventListener('keydown', doCommand)
 
@@ -166,15 +167,37 @@ function nextMap () {
 └─────────────────────────────────────────────────────────┘`
 }
 
+function isAiPathAccurate (playerSpace: number) {
+  if (aiPath.value.length < 1) return false
+  else return Math.abs(playerSpace - aiPath.value[0]) <= 10
+}
+
 async function moveAi() {
   while (aiExists) {
-    if (store.map.indexOf(ai) !== -1) {
-      let direction = lastAiDirection
-      if (Math.random() > .8) { // most of the time, try to go the same direction as the last move
-        direction = directions[Math.floor(Math.random() * directions.length)]
-        lastAiDirection = direction
+    const aiSpace = store.map.indexOf(ai)
+    const playerSpace = store.map.indexOf(player)
+    if (aiSpace !== -1) {
+      let current = aiSpace
+      let next = current
+      let nextChar
+      if (isAiPathAccurate(playerSpace)) { // our path is good enough, let's take it without searching again
+        next = aiPath.value.pop()
+        nextChar = store.map[next]
+      } else { // player has moved, need to find a new path
+        const foundPath = await dijkstras(aiSpace, playerSpace)
+        if (foundPath && aiPath.value.length > 0) {
+          console.log('found you')
+          next = aiPath.value.pop()
+          nextChar = store.map[next]
+        } else { // couldn't find a path to player
+          let direction = lastAiDirection
+          if (Math.random() > .8) { // most of the time, try to go the same direction as the last move
+            direction = directions[Math.floor(Math.random() * directions.length)]
+            lastAiDirection = direction
+          }
+          ({ current, next, nextChar } = findNextMove(ai, direction))
+        }
       }
-      let { current, next, nextChar } = findNextMove(ai, direction)
       if (isPlayer(nextChar)) {
         // @ts-ignore
         play({id: 'death'})
@@ -213,6 +236,77 @@ function spawnNewStar(): void {
 
 function spawnNewStarsIntermittently (): void {
   setInterval(spawnNewStar, starSpawnInterval)
+}
+
+function getLegalNeighbors (space: number, nodes: any[]): any[] {
+  return [
+    space + 1,
+    space - 1,
+    space - width - 1,
+    space + width + 1
+  ].filter(s => isLegalMove(store.map[s], []))
+    .map(s => nodes.find(n => n.i === s))
+}
+
+// function hasUnexploredNodes (nodes: any[]) {
+//   return nodes.find((node: any) => node.explored)
+// }
+
+function savePath (endingNode: any): void {
+  let currentNode = endingNode
+  const path: any[] = []
+  while (currentNode.parent !== null) {
+    if (currentNode.char !== ai) {
+      path.push(currentNode.i)
+      currentNode = currentNode.parent
+      // if (currentNode.char !== ai)
+      //   setSpace('!', currentNode.i)
+    }
+  }
+  aiPath.value = path
+}
+
+async function dijkstras (startingSpace: number, destinationSpace: number): Promise<any> {
+  const nodes = store.map.split('')
+    .map((space: string, i: number) => {
+      return {
+        char: space,
+        i: i,
+        dist: i === startingSpace ? 0 : Number.MAX_VALUE,
+        parent: null,
+        explored: false,
+      }
+    })
+  while (1==1) {
+    const unexploredNodes = nodes.filter((node: any) => !node.explored)
+    if (unexploredNodes.length === 0) {
+      console.log('dijkstras failed')
+      return false
+    } else {
+      unexploredNodes.sort((a: any, b: any) => a.dist > b.dist ? 1 : -1)
+      const currentNode = unexploredNodes[0]
+      currentNode.explored = true
+      if (currentNode.i === destinationSpace) {
+        // console.log('found path!')
+        // console.log(currentNode)
+        savePath(currentNode)
+        return true
+      } else {
+        const neighbors = getLegalNeighbors(currentNode.i, nodes)
+        for (let n=0; n<neighbors.length; n++) {
+          const neighborNode = neighbors[n]
+          if (neighborNode) { // TODO why is this ever undefined? 
+            const newDist = currentNode.dist + 1
+            if (newDist < neighborNode.dist) {
+              neighborNode.dist = newDist
+              neighborNode.parent = currentNode
+            }
+          }
+        }
+      }
+      await new Promise(resolve => setTimeout(resolve, 0))
+    }
+  }
 }
 
 watch(count, (count: number, prevCount: number) => {
