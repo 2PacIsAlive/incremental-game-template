@@ -167,9 +167,10 @@ function nextMap () {
 └─────────────────────────────────────────────────────────┘`
 }
 
+// TODO this is super flawed, need to find a better way of doing this
 function isAiPathAccurate (playerSpace: number) {
   if (aiPath.value.length < 1) return false
-  else return Math.abs(playerSpace - aiPath.value[0]) <= 10
+  else return Math.abs(playerSpace - aiPath.value[0]) <= 100
 }
 
 async function moveAi() {
@@ -263,6 +264,7 @@ function savePath (endingNode: any): void {
       //   setSpace('!', currentNode.i)
     }
   }
+  // @ts-ignore TODO wut
   aiPath.value = path
 }
 
