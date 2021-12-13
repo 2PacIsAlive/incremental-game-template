@@ -114,11 +114,13 @@ function doCommand(e: any) {
     if (isLegalMove(nextChar, playerIllegalMoves)) {
       if (isStar(nextChar)) {
         store.stars += 1
+        // @ts-ignore
         play({id: 'star'})
         if (playbackRate.value < 4) playbackRate.value += 0.01
       }
       if (isPortal(nextChar)) {
         next = nextPortal(nextChar)
+        // @ts-ignore
         play({id: 'portal'})
       }
       if (isExit(nextChar)) nextMap()
@@ -128,6 +130,7 @@ function doCommand(e: any) {
 }
 
 function nextMap () {
+  // @ts-ignore
   play({id: 'nextMap'})
   store.map = 
 `┌─────────────────────────────────────────────────────────┐
@@ -173,6 +176,7 @@ async function moveAi() {
       }
       let { current, next, nextChar } = findNextMove(ai, direction)
       if (isPlayer(nextChar)) {
+        // @ts-ignore
         play({id: 'death'})
         alert('YOU DIED')
         store.deaths += 1
