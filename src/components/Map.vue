@@ -2,9 +2,14 @@
 import { onUnmounted, ref, watch } from 'vue'
 import { useStore } from '../store'
 import { storeToRefs } from 'pinia'
+import { useSound } from '@vueuse/sound'
+import chirpSfx from '../assets/chirp.mp3'
 
 const store = useStore()
 const { count } = storeToRefs(store)
+
+const playbackRate = ref(1)
+const { play, sound } = useSound(chirpSfx, { playbackRate })
 
 const width = 59
 const height = 31
@@ -18,7 +23,7 @@ const playerIllegalMoves: string[] = []
 
 const ai = 'L'
 const aiSpeed = ref(50)
-let aiExists = true
+let  aiExists = true
 const aiIllegalMoves: string[] = [ 
   exit,
 ]
@@ -99,7 +104,11 @@ function doCommand(e: any) {
   if (direction) {
     let { current, next, nextChar } = findNextMove(player, direction)
     if (isLegalMove(nextChar, playerIllegalMoves)) {
-      if (isStar(nextChar)) store.stars += 1
+      if (isStar(nextChar)) {
+        store.stars += 1
+        play()
+        if (playbackRate.value < 4) playbackRate.value += 0.01
+      }
       if (isPortal(nextChar)) next = nextPortal(nextChar)
       if (isExit(nextChar)) nextMap()
       else moveEntity(player, current, next)    

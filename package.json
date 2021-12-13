@@ -8,6 +8,7 @@
     "stage": "npm run build && surge --project dist --domain https://$npm_package_name.surge.sh"
   },
   "dependencies": {
+    "@vueuse/sound": "^1.1.7",
     "decimal.js": "^10.3.1",
     "pinia": "^2.0.6",
     "swarm-numberformat": "^0.4.0",
