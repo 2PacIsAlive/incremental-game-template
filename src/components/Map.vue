@@ -4,6 +4,8 @@ import { useStore } from '../store'
 import { storeToRefs } from 'pinia'
 import { useSound } from '@vueuse/sound'
 import sfx from '../assets/sfx.mp3'
+// @ts-ignore
+import amaze from '../../amaze'
 
 const store = useStore()
 const { count } = storeToRefs(store)
@@ -19,8 +21,8 @@ const { play, sound } = useSound(sfx, {
   playbackRate,
 })
 
-const width = 59
-const height = 31
+const width = ref(59)
+const height = ref(31)
 
 const exitSpace = 1798
 const exit = 'e'
@@ -57,7 +59,7 @@ const directionKeys: any = {
 const directions: string[] = Object.values(directionKeys)
 
 function isLegalMove (char: string, extraIllegals: string[]): boolean {
-  return !(['│','┌','┐','└','┘','─'].concat(extraIllegals)
+  return !(['│','┌','┐','└','┘','─','\n','#'].concat(extraIllegals)
     .includes(char))
 }
 
@@ -70,7 +72,7 @@ function isStar (char: string): boolean {
 }
 
 function isPortal (char: string): boolean {
-  return char.toLowerCase() === 'p'
+  return char?.toLowerCase() === 'p'
 }
 
 function isExit (char: string): boolean {
@@ -96,9 +98,9 @@ function findNextMove (entity: string, direction: string) {
   const current: number = store.map.indexOf(entity)
   let next: number = current
   if (direction === 'U')
-    next = current - width - 1
+    next = current - width.value - 1
   else if (direction === 'D')
-    next = current + width + 1
+    next = current + width.value + 1
   else if (direction === 'L')
     next = current - 1
   else if (direction === 'R')
@@ -219,8 +221,8 @@ async function moveAi() {
 }
 
 function randomSpace(): number {
-    const min = Math.ceil(width + 1)
-    const max = Math.floor(store.map.length - width - 1)
+    const min = Math.ceil(width.value + 1)
+    const max = Math.floor(store.map.length - width.value - 1)
     return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
@@ -243,8 +245,8 @@ function getLegalNeighbors (space: number, nodes: any[]): any[] {
   return [
     space + 1,
     space - 1,
-    space - width - 1,
-    space + width + 1
+    space - width.value - 1,
+    space + width.value + 1
   ].filter(s => isLegalMove(store.map[s], []))
     .map(s => nodes.find(n => n.i === s))
 }
@@ -311,6 +313,75 @@ async function dijkstras (startingSpace: number, destinationSpace: number): Prom
   }
 }
 
+function generateEmptyMap (width: number, height: number): string[][] {
+  const map = Array(height).fill(Array(width).fill(' '))
+    .map((row: string[], i: number) => {
+      if (i === 0) 
+        return row.map((_, i) => {
+          if (i === 0) return '┌'
+          else if (i === width-1) return '┐'
+          else return '─'
+        })
+      else if (i === height-1)
+        return row.map((_, i) => {
+          if (i === 0) return '└'
+          else if (i === width-1) return '┘'
+          else return '─'
+        })
+      else return row.map((_, i) => {
+        if (i === 0 || i === width-1) return '│'
+        else return ' '
+      })
+    })
+  return map
+}
+
+function randomInRange(max: number, min: number) {
+  return Math.floor(Math.random() * (max - min + 1)) + min
+}
+
+function recursiveDivision (map: string[][], n: number) {
+  if (n === 2) return map
+  else {
+    const randomRow = randomInRange(3, map.length-3)
+    const randomCol = randomInRange(3, map[0].length-3)
+    const randomRowDoor = randomInRange(1, map.length-1)
+    const randomColDoor = randomInRange(1, map.length-1)
+    console.log(randomColDoor)
+    return map
+    .map((row, i) => {
+      if (i === 0 || i === map.length-1) return row
+      else if (i === randomRow)
+        return row.map((space, ii) => {
+          if (ii === 0 || ii === row.length-1) return space
+          else if (ii === randomRowDoor) return ' '
+          else return '─'
+        })
+      else return row
+    })
+    .map((row, i) => {
+      if (i === 0 || i === map.length-1) return row
+      else if (i === randomColDoor) return row.map((space, ii) => {
+        if (ii === randomCol) return ' '
+        else return space
+      })
+      else return row.map((space, ii) => {
+        if (ii === randomCol) return '│'
+        else return space
+      })
+    })
+  }
+}
+
+function generateMaze (): void {
+  // store.map = recursiveDivision(generateEmptyMap(width, height), 1)
+  //   .map(row => row?.join(''))
+  //   .join('\n')
+  store.map = amaze()
+  width.value = 18
+  height.value = 11
+}
+
 watch(count, (count: number, prevCount: number) => {
   if (count >= 1000000 && prevCount < 1000000) {
     setSpace(exit, exitSpace)
@@ -330,6 +401,7 @@ moveAi()
     ai speed:
     <input type="range" min="0" max="100" class="slider" id="aispeed" v-model="aiSpeed">
   </p>
+  <button @click="generateMaze">gen maze</button>
 </template>
 
 <style scoped>

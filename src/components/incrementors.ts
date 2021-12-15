@@ -10,16 +10,16 @@ export interface Incrementors {
 
 export const incrementors: Incrementors = {
   sqrt: function (decimal) {
-    return decimal.plus(Decimal.sqrt(decimal))
+    return Decimal.add(decimal, Decimal.sqrt(decimal))
   },
   constant: function (decimal) {
     return Decimal.add(1, decimal)
   },
   log10: function (decimal) {
-    return decimal.plus(Decimal.log10(decimal))
+    return Decimal.add(decimal, Decimal.log10(decimal))
   },
   log2: function (decimal) {
-    return decimal.plus(Decimal.log2(decimal))
+    return Decimal.add(decimal, Decimal.log2(decimal))
   },
   exponential: function (decimal) {
     return Decimal.pow(decimal, 2)
