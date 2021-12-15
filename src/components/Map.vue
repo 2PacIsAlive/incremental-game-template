@@ -57,7 +57,7 @@ const directionKeys: any = {
 const directions: string[] = Object.values(directionKeys)
 
 function isLegalMove (char: string, extraIllegals: string[]): boolean {
-  return !(['│','┌','┐','└','┘','─'].concat(extraIllegals)
+  return !(['│','┌','┐','└','┘','─','\n'].concat(extraIllegals)
     .includes(char))
 }
 
@@ -70,7 +70,7 @@ function isStar (char: string): boolean {
 }
 
 function isPortal (char: string): boolean {
-  return char.toLowerCase() === 'p'
+  return char?.toLowerCase() === 'p'
 }
 
 function isExit (char: string): boolean {
