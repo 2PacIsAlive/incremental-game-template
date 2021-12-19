@@ -57,6 +57,7 @@ export const useStore = defineStore('main', {
       stars: savedState?.stars || 0,
       aiStars: savedState?.aiStars || 0,
       deaths: savedState?.deaths || 0,
+      openScreen: savedState?.openScreen || 'count'
     }
   },
   actions: {
@@ -70,6 +71,7 @@ export const useStore = defineStore('main', {
         stars: this.stars,
         aiStars: this.stars,
         deaths: this.deaths,
+        openScreen: this.openScreen,
       }))
     },
     reset () {

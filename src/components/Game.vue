@@ -13,18 +13,8 @@ defineProps<{ something: string }>()
 const store = useStore(),
   saveInterval = 10000
 
-function openTab(tab: string, event: any): void {
-  const tabcontent = document.getElementsByClassName("tabcontent") as HTMLCollectionOf<HTMLElement>
-  for (let i = 0; i < tabcontent.length; i++) {
-    tabcontent[i].style.display = "none"
-  }
-  const tablinks = document.getElementsByClassName("tablinks")
-  for (let i = 0; i < tablinks.length; i++) {
-    tablinks[i].className = tablinks[i].className.replace(" active", "")
-  }
-  const tabElement = document.getElementById(tab)
-  if (tabElement) tabElement.style.display = "block"
-  event.currentTarget.className += " active"
+function openScreen(tab: string): void {
+  store.openScreen = tab
 }
 
 function measureLag(): void {
@@ -65,67 +55,62 @@ gameLoop()
 </script>
 
 <template>
-  <div class="tab">
-    <button class="tablinks" @click="openTab('count', $event)" id="defaulttab">count</button>
-    <button class="tablinks" @click="openTab('map', $event)">map</button>
+  <div class="sidenav">
+    <a href="#" @click="openScreen('count')">count</a>
+    <a href="#" @click="openScreen('map')">map</a>
   </div>
 
-  <div id="count" class="tabcontent">
-    <Count />
-  </div>
-
-  <div id="map" class="tabcontent">
-   <Map />
-  </div>
-
-  <div id="globalcontrols">
-    <button type="button" @click="saveGame">save</button>
-    <button class="button-with-margin" type="button" @click="store.reset">reset</button>
+  <div class="main">
+    <Count v-if="store.openScreen === 'count'"/>
+    <Map v-else-if="store.openScreen === 'map'"/>
+    <div id="globalcontrols">
+      <button type="button" @click="saveGame">save</button>
+      <button class="button-with-margin" type="button" @click="store.reset">reset</button>
+    </div>
   </div>
 </template>
 
 <style scoped>
+* {box-sizing: border-box}
+
 #globalcontrols {
   padding-top: 10px;
 } 
-
-.tab {
-  overflow: hidden;
-  border: 1px solid #ccc;
-  background-color: #f1f1f1;
+.sidenav {
+  height: 100%; /* Full-height: remove this if you want "auto" height */
+  width: 160px; /* Set the width of the sidebar */
+  position: fixed; /* Fixed Sidebar (stay in place on scroll) */
+  z-index: 1; /* Stay on top */
+  top: 0; /* Stay at the top */
+  left: 0;
+  text-align: left;
+  background-color: #111; /* Black */
+  overflow-x: hidden; /* Disable horizontal scroll */
+  padding-top: 20px;
 }
 
-.tab button {
-  background-color: inherit;
-  float: left;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  padding: 12px 16px;
-  transition: 0.3s;
+.sidenav a {
+  padding: 6px 8px 6px 16px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
 }
 
-.tab button:hover {
-  background-color: #ddd;
+/* When you mouse over the navigation links, change their color */
+.sidenav a:hover {
+  color: #f1f1f1;
 }
 
-.tab button.active {
-  background-color: #ccc;
+/* Style page content */
+.main {
+  margin-left: 160px; /* Same as the width of the sidebar */
+  padding: 0px 10px;
 }
 
-.tabcontent {
-  display: none;
-  padding: 2px 20px 10px;
-  border: 1px solid #ccc;
-  border-top: none;
-}
-
-.tabcontent {
-  animation: fadeEffect 1s;
-}
-
-@keyframes fadeEffect {
-  from {opacity: 0;}
-  to {opacity: 1;}
+/* On smaller screens, where height is less than 450px, change the style of the sidebar (less padding and a smaller font size) */
+@media screen and (max-height: 450px) {
+  .sidenav {padding-top: 15px;}
+  .sidenav a {font-size: 18px;}
 }
 </style>
