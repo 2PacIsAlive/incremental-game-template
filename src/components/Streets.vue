@@ -4,9 +4,11 @@ import { useStore } from '../store'
 import { storeToRefs } from 'pinia'
 import { useSound } from '@vueuse/sound'
 import sfx from '../assets/sfx.mp3'
+import { NSlider } from 'naive-ui'
 
 const store = useStore()
-const { count } = storeToRefs(store)
+const { money } = storeToRefs(store)
+import { Decimal } from 'decimal.js'
 
 const playbackRate = ref(1)
 const { play, sound } = useSound(sfx, { 
@@ -29,14 +31,17 @@ const player = '@'
 const playerDefaultLocation = 1172
 const playerIllegalMoves: string[] = []
 
-const ai = 'L'
-const aiSpeed = ref(50)
-let  aiExists = true
+const ai = 'C'
+const aiRegex = /C/g
+const aiSpeed = ref(0)
+const aiSearching = ref(true)
+const aiExists = ref(true)
 const aiIllegalMoves: string[] = [ 
   exit,
+  'p', 'P'
 ]
 
-const starSpawnInterval = 3000
+const starSpawnInterval = 5000
 
 let lastAiDirection = 'D'
 const aiPath = ref([])
@@ -115,9 +120,10 @@ function doCommand(e: any) {
     if (isLegalMove(nextChar, playerIllegalMoves)) {
       if (isStar(nextChar)) {
         store.stars += 1
+        store.money = Decimal.add(store.money, 100 * store.stars)
         // @ts-ignore
         play({id: 'star'})
-        if (playbackRate.value < 4) playbackRate.value += 0.01
+        if (playbackRate.value < 4) playbackRate.value += 0.001
       }
       if (isPortal(nextChar)) {
         next = nextPortal(nextChar)
@@ -175,6 +181,11 @@ function isAiPathAccurate (playerSpace: number) {
 
 async function moveAi() {
   while (aiExists) {
+    if ((store.map.match(aiRegex)||[]).length > 1) {
+      console.log('something fucky happened', aiPath.value)
+      setSpace(' ', store.map.indexOf(ai))
+    }
+    console.log(aiSpeed.value)
     const aiSpace = store.map.indexOf(ai)
     const playerSpace = store.map.indexOf(player)
     if (aiSpace !== -1) {
@@ -185,9 +196,10 @@ async function moveAi() {
         next = aiPath.value.pop()
         nextChar = store.map[next]
       } else { // player has moved, need to find a new path
+        aiSearching.value = true
         const foundPath = await dijkstras(aiSpace, playerSpace)
         if (foundPath && aiPath.value.length > 0) {
-          console.log('found you')
+          aiSearching.value = false
           next = aiPath.value.pop()
           nextChar = store.map[next]
         } else { // couldn't find a path to player
@@ -204,6 +216,7 @@ async function moveAi() {
         play({id: 'death'})
         alert('YOU DIED')
         store.deaths += 1
+        store.menuOptions[2].disabled = false
         moveEntity(player, current, playerDefaultLocation)
       }
       if (isLegalMove(nextChar, aiIllegalMoves)) {
@@ -211,9 +224,9 @@ async function moveAi() {
         if (isPortal(nextChar)) next = nextPortal(nextChar)
         moveEntity(ai, current, next)
       }
-      await new Promise(resolve => setTimeout(resolve, 100 - aiSpeed.value))
+      await new Promise(resolve => setTimeout(resolve, 150 - aiSpeed.value))
     } else {
-      aiExists = false
+      aiExists.value = false
     }
   }
 }
@@ -311,27 +324,45 @@ async function dijkstras (startingSpace: number, destinationSpace: number): Prom
   }
 }
 
-watch(count, (count: number, prevCount: number) => {
-  if (count >= 1000000 && prevCount < 1000000) {
+watch(money, (money: number, prevMoney: number) => {
+  if (money >= 10000 && prevMoney < 10000)
+    spawnNewStarsIntermittently()
+  if (money >= 1000000 && prevMoney < 1000000)
     setSpace(exit, exitSpace)
-  }
 })
 
-spawnNewStarsIntermittently()
 moveAi()
 </script>
 
 <template>
-  <pre>{{store.map}}</pre>
-  <p>deaths: {{store.deaths}}</p>
+  <div id="streets">
+    <p v-if="aiExists && aiSearching">the cops are looking for you</p>
+    <p id="run" v-else-if="aiExists && !aiSearching">you should probably run</p>
+    <pre>{{store.map}}</pre>
+    <p>nab stars to earn dough</p>
+  </div>
+  <!-- <p>deaths: {{store.deaths}}</p>
   <p>stars: {{store.stars}}</p>
   <p>ai stars: {{store.aiStars}}</p>
   <p>
     ai speed:
-    <input type="range" min="0" max="100" class="slider" id="aispeed" v-model="aiSpeed">
-  </p>
+    <n-slider
+      :step="1"
+      :format-tooltip="value => `${value}%`"
+      v-model:value="aiSpeed"
+    />
+  </p> -->
 </template>
 
 <style scoped>
-
+pre {
+  line-height: 1.2; 
+}
+#streets {
+  margin-top: 10%;
+  text-align: center; 
+}
+#run {
+  color: red;
+}
 </style>

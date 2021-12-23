@@ -3,21 +3,27 @@
 // Check out https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup
 // @ts-ignore
 import Game from './components/Game.vue'
-
 import { useStore } from './store'
+import { darkTheme, NConfigProvider, NLoadingBarProvider, NGrid, NGi } from 'naive-ui'
 
 const store = useStore()
 </script>
 
 <template>
-  <div class="app">
-    <div id="content-wrap">
-      <Game something="anything" />
-    </div>
-    <footer id="footer">
-      <p id="saveddisplay" v-if="store.displaySaved">game saved</p>
-    </footer>
-  </div>
+  <n-config-provider :theme="darkTheme">
+    <n-loading-bar-provider>
+      <div class="app">
+        <div id="content-wrap">
+          <Game />
+        </div>
+        <footer id="footer">
+          <span id="saveddisplay" v-if="store.displaySaved">saved </span>
+          <span>lag: {{ store.lag.toFixed(0) }}ms </span>
+          <span id="reset" @click="store.reset()">reset </span>
+        </footer>
+      </div>
+    </n-loading-bar-provider>
+  </n-config-provider>
 </template>
 
 <style>
@@ -32,11 +38,10 @@ body, html {
   font-family: Inconsolata;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
   color: #2c3e50;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  /* align-items: center; */
+  /* justify-content: center; */
   height: 100vh;
 }
 
@@ -57,5 +62,13 @@ body, html {
 
 .button-with-margin {
   margin-left:10px;
+}
+
+#reset {
+  text-align: right;
+  color: red;
+}
+#reset:hover {
+  cursor: pointer;
 }
 </style>
