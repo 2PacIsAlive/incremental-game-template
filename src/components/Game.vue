@@ -9,13 +9,14 @@ import Streets from './Streets.vue'
 import Pad from './Pad.vue'
 // @ts-ignore
 import Gym from './Gym.vue'
-import { NIcon, NSpace, NSwitch, NLayout, NLayoutSider, NMenu } from 'naive-ui'
+import { NIcon, NSpace, NSwitch, NLayout, NLayoutSider, NMenu, useNotification } from 'naive-ui'
 import { HomeOutline, CaretDownOutline, SkullOutline, SubwayOutline, StorefrontOutline, BarbellOutline } from '@vicons/ionicons5'
 const icons = { HomeOutline, CaretDownOutline, SkullOutline, SubwayOutline, StorefrontOutline, BarbellOutline }
 
 const store = useStore(),
   collapsed = ref(false),
-  saveInterval = 10000
+  notification = useNotification(),
+  saveInterval = 20000
 
 function renderMenuLabel (option: any) {
   return option.disabled
@@ -50,8 +51,15 @@ function measureLag(): void {
 
 function saveGame(): void {
   store.save()
-  store.displaySaved = true
-  setTimeout(() => store.displaySaved = false, 2000)
+  notification.info({
+    title: 'game saved',
+    // content: `game saved`,
+    meta: new Date().toLocaleTimeString(),
+    duration: 2500,
+    closable: true,
+  })
+  // store.displaySaved = true
+  // setTimeout(() => store.displaySaved = false, 2000)
 }
 
 function saveGameIntermittently(): void {
@@ -101,9 +109,9 @@ gameLoop()
         />
       </n-layout-sider>
       <n-layout>
-        <Pad v-if="store.openScreen === 'the pad'" />
-        <Streets v-else-if="store.openScreen === 'the streets'" />
-        <Gym v-else-if="store.openScreen === 'the gym'" />
+        <Pad class="game-screen" v-if="store.openScreen === 'the pad'" />
+        <Streets class="game-screen" v-else-if="store.openScreen === 'the streets'" />
+        <Gym class="game-screen" v-else-if="store.openScreen === 'the gym'" />
       </n-layout>
     </n-layout>
   </n-space>
@@ -112,5 +120,9 @@ gameLoop()
 <style scoped>
 * {
   box-sizing: border-box;
+}
+
+.game-screen {
+  margin-top: 5%
 }
 </style>

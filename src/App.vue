@@ -4,26 +4,38 @@
 // @ts-ignore
 import Game from './components/Game.vue'
 import { useStore } from './store'
-import { darkTheme, NConfigProvider, NLoadingBarProvider, NGrid, NGi } from 'naive-ui'
+import { darkTheme, NConfigProvider, NLoadingBarProvider, NGrid, NGi, NThemeEditor, NGlobalStyle, NModal, NButton, NCard, NNotificationProvider } from 'naive-ui'
 
 const store = useStore()
 </script>
 
 <template>
+<n-theme-editor>
   <n-config-provider :theme="darkTheme">
     <n-loading-bar-provider>
-      <div class="app">
-        <div id="content-wrap">
-          <Game />
+      <n-notification-provider>
+        <div class="app">
+          <div id="content-wrap">
+            <Game />
+          </div>
+          <footer id="footer">
+            <span id="saveddisplay" v-if="store.displaySaved">saved </span>
+            <span>lag: {{ store.lag.toFixed(0) }}ms </span>
+            <span id="reset" @click="store.reset()">reset </span>
+          </footer>
+          <n-modal :show="store.showDeathModal">
+            <n-card style="width: 300px;" title="you died" :bordered="false" size="small">
+              <template #footer>
+                <n-button @click="store.showDeathModal = false">respawn</n-button>
+              </template>
+            </n-card>
+          </n-modal>
         </div>
-        <footer id="footer">
-          <span id="saveddisplay" v-if="store.displaySaved">saved </span>
-          <span>lag: {{ store.lag.toFixed(0) }}ms </span>
-          <span id="reset" @click="store.reset()">reset </span>
-        </footer>
-      </div>
+      </n-notification-provider>
     </n-loading-bar-provider>
+    <n-global-style />
   </n-config-provider>
+  </n-theme-editor>
 </template>
 
 <style>

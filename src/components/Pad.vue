@@ -54,32 +54,33 @@ function clearAutomators (): void {
 </script>
 
 <template>
-  <n-space align="center" justify="center" vertical size="large">
-    <h1>{{ formattedMoney }}</h1>
-    <n-button :loading="loadingGoToWork" :disabled="loadingGoToWork" @click="goToWork">
-      <template #icon>
-        <n-icon>
-          <cash-outline />
-        </n-icon>
+  <div id="pad">
+    <n-space align="center" justify="center" vertical size="large">
+      <h1>{{ formattedMoney }}</h1>
+      <n-button :loading="loadingGoToWork" :disabled="loadingGoToWork" @click="goToWork">
+        <template #icon>
+          <n-icon>
+            <cash-outline />
+          </n-icon>
+        </template>
+        grind (+{{ formattedPay }})
+      </n-button> 
+      <n-button v-if="store.cars.length > 0 && store.money >= 100" :disabled="store.carCost > store.money" @click="buyCar">
+        <template #icon>
+          <n-icon>
+            <car-outline v-if="store.carCost <= 500" />
+            <car-sport-outline v-else />
+          </n-icon>
+        </template>
+        buy a new car (-${{ store.carCost }})
+      </n-button> 
+      <template v-if="'car' in store.posessions">
+        <p v-for="[k, v] in Object.entries(store.posessions)" :key="k">
+          {{ k }}: {{ v }}
+        </p>
       </template>
-      grind (+{{ formattedPay }})
-    </n-button> 
-    <n-button v-if="store.cars.length > 0 && store.money >= 100" :disabled="store.carCost > store.money" @click="buyCar">
-      <template #icon>
-        <n-icon>
-          <car-outline v-if="store.carCost <= 500" />
-          <car-sport-outline v-else />
-        </n-icon>
-      </template>
-      buy a new car (-${{ store.carCost }})
-    </n-button> 
-    <template v-if="'car' in store.posessions">
-      <p v-for="[k, v] in Object.entries(store.posessions)" :key="k">
-        {{ k }}: {{ v }}
-      </p>
-    </template>
-  </n-space>
-
+    </n-space>
+  </div>
 </template>
 
 <style scoped>

@@ -9,7 +9,7 @@ const defaultMap =
 │ │              │  │                                   │ │
 │ │  ┌─────────┐ │* │  ┌────────────┐       ┌───────────┘ │
 │ │  │P *  * * └─┘  │  │            └───────┘             │
-│ │  │ *┌───┐ *   * │  │* ┌──────┐   ********  ┌───────┐  │
+│ │  │ *┌───┐ *   * │  │* ┌──────┐   *   *  *  ┌───────┐  │
 │ │  └──┘   └───────┘  └──┘      └─────────────┘       │* │
 │ │                                                    │  │
 │ │      ┌───────────────────────────────────────────┐ │  │
@@ -18,21 +18,21 @@ const defaultMap =
 │     │  │ │*                    │  │           │    │ │ *│
 │ ┌───┘  │ └─────────────┐  ┌─┐  │  │ ┌─┐       │    │ │  │
 │ │      │     *    *  * │  │ │  │  │ │ │       │    │ │  │
-│ └──────┘       ┌────┐ *│  │ │  │  │ │ │ ┌─┐   │    │ │  │
+│ └──────┘       ┌────┐ *│ *│ │  │  │ │ │ ┌─┐   │    │ │  │
 │           *    │    │* │  │ │  │  │ │ │ │ └───┘    │ │  │
 │ ┌──────────────┘    └──┘  │ │  │  │ │ │ │          │ │* │
 │ │                         │ │  │  │ │ │ └──────────┘ │  │
 │ │  ┌────┐ ┌───────────────┘ │@ │  │ │ │              │  │
 │ │  │    │ │                 └──┘  │ │ └───────────┐  │  │
-│ │  │    │ │                       │ │             │  │  │
+│ │  │    │*│                       │ │             │  │  │
 │ │  │    │ └───────────────────────┘ └─────────┐   │  │ *│
-│ │  │    │                                     │   │  │  │
+│ │  │    │            *                        │   │  │  │
 │ │  │    └────────────────────┐  ┌─────────────┘   │  │  │
-│ │  │                         │  │                 │  │  │
+│ │  │     *                   │  │                 │  │  │
 │ │  └─────────┐  ┌────────────┘  └──────┐  ┌───────┘  │  │
-│ │            │  │p                   * │  │          │* │
+│ │            │  │p        *          * │  │          │* │
 │ └────────────┘  └──────────────────────┘  └──────────┘  │
-│                                                         │
+│        *                                                │
 └─────────────────────────────────────────────────────────┘`
 
 const defaultMenu = [
@@ -59,7 +59,7 @@ const defaultCars = ['1993 Ford Aspire', '2020 Subaru BRZ', 'Lamborghini Aventad
 export const useStore = defineStore('main', {
   // arrow function recommended for full type inference
   state: () => {
-    const localStorageSave = localStorage.getItem('save')
+    const localStorageSave = localStorage.getItem('savev2')
     const savedState = localStorageSave 
       ? JSON.parse(localStorageSave)
       : undefined
@@ -88,12 +88,13 @@ export const useStore = defineStore('main', {
       aiStars: savedState?.aiStars || 0,
       deaths: savedState?.deaths || 0,
       openScreen: savedState?.openScreen || 'the pad',
-      menuOptions: savedState?.menuOptions || defaultMenu
+      menuOptions: savedState?.menuOptions || defaultMenu,
+      showDeathModal: savedState?.showDeathModal || false,
     }
   },
   actions: {
     save () {
-      localStorage.setItem('save', JSON.stringify({
+      localStorage.setItem('savev2', JSON.stringify({
         money: this.money,
         lastMoney: this.lastMoney,
         pay: this.pay,
@@ -112,10 +113,11 @@ export const useStore = defineStore('main', {
         deaths: this.deaths,
         openScreen: this.openScreen,
         menuOptions: this.menuOptions,
+        showDeathModal: this.showDeathModal,
       }))
     },
     reset () {
-      localStorage.removeItem('save')
+      localStorage.removeItem('savev2')
       this.$reset()
     },
   },

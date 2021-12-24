@@ -1,14 +1,23 @@
 <script setup lang="ts">
-import { onUnmounted, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { useStore } from '../store'
 import { storeToRefs } from 'pinia'
 import { useSound } from '@vueuse/sound'
 import sfx from '../assets/sfx.mp3'
 import { NSlider } from 'naive-ui'
+import { Decimal } from 'decimal.js'
 
 const store = useStore()
 const { money } = storeToRefs(store)
-import { Decimal } from 'decimal.js'
+const coloredMap = computed(() => {
+  return store.map
+    // note: need to do this one first because "span" has a p in it lmao
+    .replace(/\p/g, coloredSpace('p', '#09f8f6'))
+    .replace(/\P/g, coloredSpace('P', '#09f8f6'))
+    .replace(/\@/g, coloredSpace(player, '#36AD6AFF')) // TODO how to interpolate 
+    .replace(/\C/g, coloredSpace(ai, 'red'))
+    .replace(/\*/g, coloredSpace('*', '#b39700'))
+})
 
 const playbackRate = ref(1)
 const { play, sound } = useSound(sfx, { 
@@ -33,7 +42,7 @@ const playerIllegalMoves: string[] = []
 
 const ai = 'C'
 const aiRegex = /C/g
-const aiSpeed = ref(0)
+const aiSpeed = ref(50)
 const aiSearching = ref(true)
 const aiExists = ref(true)
 const aiIllegalMoves: string[] = [ 
@@ -61,9 +70,21 @@ const directionKeys: any = {
 
 const directions: string[] = Object.values(directionKeys)
 
+function coloredSpace(char: string, color: string): string {
+  return `<span style="color: ${color}">${char}</span>`
+}
+
 function isLegalMove (char: string, extraIllegals: string[]): boolean {
   return !(['│','┌','┐','└','┘','─','\n'].concat(extraIllegals)
     .includes(char))
+}
+
+function isValidMove(current: number, next: number): boolean {
+  if (next === current+1
+    || next === current-1
+    || next === current-width-1
+    || next === current+width+1) return true
+  return false
 }
 
 function isPlayer (char: string): boolean {
@@ -176,13 +197,14 @@ function nextMap () {
 // TODO this is super flawed, need to find a better way of doing this
 function isAiPathAccurate (playerSpace: number) {
   if (aiPath.value.length < 1) return false
-  else return Math.abs(playerSpace - aiPath.value[0]) <= 100
+  else return true // Math.abs(playerSpace - aiPath.value[0]) <= 100
 }
 
 async function moveAi() {
   while (aiExists) {
     if ((store.map.match(aiRegex)||[]).length > 1) {
       console.log('something fucky happened', aiPath.value)
+      aiPath.value = []
       setSpace(' ', store.map.indexOf(ai))
     }
     console.log(aiSpeed.value)
@@ -214,17 +236,23 @@ async function moveAi() {
       if (isPlayer(nextChar)) {
         // @ts-ignore
         play({id: 'death'})
-        alert('YOU DIED')
+        store.showDeathModal = true
+        // alert('YOU DIED')
         store.deaths += 1
         store.menuOptions[2].disabled = false
         moveEntity(player, current, playerDefaultLocation)
       }
-      if (isLegalMove(nextChar, aiIllegalMoves)) {
-        if (isStar(nextChar)) store.aiStars += 1
-        if (isPortal(nextChar)) next = nextPortal(nextChar)
-        moveEntity(ai, current, next)
+      if (isValidMove(current, next)) {
+        if (isLegalMove(nextChar, aiIllegalMoves)) {
+          if (isStar(nextChar)) store.aiStars += 1
+          if (isPortal(nextChar)) next = nextPortal(nextChar)
+          moveEntity(ai, current, next)
+        }
+      } else {
+        console.log('ai path got hosed, nuking from orbit')
+        aiPath.value = []
       }
-      await new Promise(resolve => setTimeout(resolve, 150 - aiSpeed.value))
+      await new Promise(resolve => setTimeout(resolve, 100 - aiSpeed.value))
     } else {
       aiExists.value = false
     }
@@ -325,21 +353,22 @@ async function dijkstras (startingSpace: number, destinationSpace: number): Prom
 }
 
 watch(money, (money: number, prevMoney: number) => {
-  if (money >= 10000 && prevMoney < 10000)
-    spawnNewStarsIntermittently()
   if (money >= 1000000 && prevMoney < 1000000)
     setSpace(exit, exitSpace)
 })
 
 moveAi()
+spawnNewStarsIntermittently()
 </script>
 
 <template>
   <div id="streets">
-    <p v-if="aiExists && aiSearching">the cops are looking for you</p>
+    <p v-if="aiExists && aiSearching">the <span style="color: red">cops</span> are looking for you</p>
     <p id="run" v-else-if="aiExists && !aiSearching">you should probably run</p>
-    <pre>{{store.map}}</pre>
-    <p>nab stars to earn dough</p>
+    <!-- <pre>{{store.map}}</pre> -->
+    <pre v-html="coloredMap"></pre>
+    <p>nab <span style="color: #b39700">stars</span> to earn dough (arrow keys or wasd)</p>
+    <p>use <span style="color: #09f8f6">portals</span> to access other parts of the map</p>
   </div>
   <!-- <p>deaths: {{store.deaths}}</p>
   <p>stars: {{store.stars}}</p>
@@ -359,7 +388,6 @@ pre {
   line-height: 1.2; 
 }
 #streets {
-  margin-top: 10%;
   text-align: center; 
 }
 #run {
