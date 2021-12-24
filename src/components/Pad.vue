@@ -36,7 +36,7 @@ async function goToWork(): Promise<void> {
   await new Promise(resolve => setTimeout(resolve, store.workDuration))
   store.money = Decimal.add(store.money, store.pay)
   store.pay = incrementors[store.payIncrementType](store.pay as Decimal)
-  store.workDuration = store.workDuration - 100
+  store.workDuration = store.workDuration - 500
   loadingGoToWork.value = false
   loadingBar.finish()
 }

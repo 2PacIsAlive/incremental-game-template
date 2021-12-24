@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch, onActivated } from 'vue'
 import { useStore } from '../store'
 import { storeToRefs } from 'pinia'
 import { useSound } from '@vueuse/sound'
@@ -110,12 +110,19 @@ function nextPortal (char: string): number {
 }
 
 function setSpace (char: string, location: number): void {
-  store.map = store.map.substring(0, location) + char + store.map.substring(location + 1)
+  const mapCopy = store.map // this helps..? ai freaks out without it?
+  store.map = mapCopy.substring(0, location) + char + mapCopy.substring(location + 1)
 }
 
-function moveEntity (entity: string, current: number, next: number): void {
-  setSpace(entity, next)
+function moveEntity (entity: string, current: number, next: number, isJump: boolean): void {
+  if (!isJump && !isValidMove(current, next)) {
+    console.warn(entity, 'attempted invalid move from', current, 'to', next)
+  } else {
+    setSpace(entity, next)
+    setSpace(' ', current) 
   setSpace(' ', current)  
+    setSpace(' ', current) 
+  }
 }
 
 function findNextMove (entity: string, direction: string) {
@@ -146,13 +153,15 @@ function doCommand(e: any) {
         play({id: 'star'})
         if (playbackRate.value < 4) playbackRate.value += 0.001
       }
+      let isJump = false
       if (isPortal(nextChar)) {
+        isJump = true
         next = nextPortal(nextChar)
         // @ts-ignore
         play({id: 'portal'})
       }
       if (isExit(nextChar)) nextMap()
-      else moveEntity(player, current, next)    
+      else moveEntity(player, current, next, isJump)    
     }
   }
 }
@@ -201,13 +210,17 @@ function isAiPathAccurate (playerSpace: number) {
 }
 
 async function moveAi() {
+  console.log('STARTING AI MOVEMENT ROUTINE')
   while (aiExists) {
+    store.aiMovementRoutineStarted = true
+    // aiPath.value.forEach((space, i) => {
+    //   if (i !== aiPath.value.length-1 && store.map[space] === ' ') setSpace('.', space)
+    // })
     if ((store.map.match(aiRegex)||[]).length > 1) {
       console.log('something fucky happened', aiPath.value)
       aiPath.value = []
       setSpace(' ', store.map.indexOf(ai))
     }
-    console.log(aiSpeed.value)
     const aiSpace = store.map.indexOf(ai)
     const playerSpace = store.map.indexOf(player)
     if (aiSpace !== -1) {
@@ -240,13 +253,12 @@ async function moveAi() {
         // alert('YOU DIED')
         store.deaths += 1
         store.menuOptions[2].disabled = false
-        moveEntity(player, current, playerDefaultLocation)
+        moveEntity(player, current, playerDefaultLocation, true)
       }
       if (isValidMove(current, next)) {
         if (isLegalMove(nextChar, aiIllegalMoves)) {
           if (isStar(nextChar)) store.aiStars += 1
-          if (isPortal(nextChar)) next = nextPortal(nextChar)
-          moveEntity(ai, current, next)
+          moveEntity(ai, current, next, false)
         }
       } else {
         console.log('ai path got hosed, nuking from orbit')
@@ -267,12 +279,14 @@ function randomSpace(): number {
 
 function spawnNewStar(): void {
   let foundAvailableSpace, space
-  while (!foundAvailableSpace) {
+  let attempts = 0
+  while (!foundAvailableSpace && attempts < 1000) {
     space = randomSpace()
     if (store.map[space] === ' ') {
       setSpace('*', space)
       foundAvailableSpace = true
     }
+    attempts += 1
   }
 }
 
@@ -357,8 +371,8 @@ watch(money, (money: number, prevMoney: number) => {
     setSpace(exit, exitSpace)
 })
 
-moveAi()
-spawnNewStarsIntermittently()
+if (!store.aiMovementRoutineStarted) moveAi()
+if (!store.starSpawnerStarted) spawnNewStarsIntermittently()
 </script>
 
 <template>
