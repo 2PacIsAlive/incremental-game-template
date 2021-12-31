@@ -9,8 +9,10 @@ import Streets from './Streets.vue'
 import Pad from './Pad.vue'
 // @ts-ignore
 import Gym from './Gym.vue'
+// @ts-ignore
+import Space from './Space.vue'
 import { NIcon, NSpace, NSwitch, NLayout, NLayoutSider, NMenu, useMessage } from 'naive-ui'
-import { HomeOutline, CaretDownOutline, SkullOutline, SubwayOutline, StorefrontOutline, BarbellOutline } from '@vicons/ionicons5'
+import { HomeOutline, CaretDownOutline, SkullOutline, SubwayOutline, StorefrontOutline, BarbellOutline, StarOutline } from '@vicons/ionicons5'
 
 const store = useStore(),
   collapsed = ref(false),
@@ -27,6 +29,7 @@ function renderMenuIcon (option: any) {
   let icon = HomeOutline
   if (option.key === 'the streets') icon = SkullOutline
   else if (option.key === 'the gym') icon = BarbellOutline
+  else if (option.key === 'the stars') icon = StarOutline
   return option.disabled
     ? false
     : h(NIcon, { onClick: function () { openScreen(option.label) } }, { default: () => 
@@ -115,6 +118,7 @@ gameLoop()
         <Pad class="game-screen" v-if="store.openScreen === 'the pad'" />
         <Streets class="game-screen" v-else-if="store.openScreen === 'the streets'" />
         <Gym class="game-screen" v-else-if="store.openScreen === 'the gym'" />
+        <Space class="game-screen" v-else-if="store.openScreen === 'the stars'" />
       </n-layout>
     </n-layout>
   </n-space>

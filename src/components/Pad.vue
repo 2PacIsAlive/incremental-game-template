@@ -8,7 +8,7 @@ import { incrementors } from './incrementors'
 
 const backend = { backend: 'decimal.js', Decimal: Decimal }
 import { NButton, NIcon, useLoadingBar, NSpace, NCard } from 'naive-ui'
-import { CashOutline, CarOutline, CarSportOutline } from '@vicons/ionicons5'
+import { CashOutline, CarOutline, CarSportOutline, RocketOutline } from '@vicons/ionicons5'
 
 const store = useStore(),
   loadingBar = useLoadingBar(),
@@ -48,6 +48,12 @@ function buyCar(): void {
   store.menuOptions[1].disabled = false
 }
 
+function buySpaceship(): void {
+  store.money -= store.spaceshipCost
+  store.posessions.spaceship = "millenium falcon"
+  store.menuOptions[3].disabled = false
+}
+
 function clearAutomators (): void {
   store.automators = []
 }
@@ -74,7 +80,15 @@ function clearAutomators (): void {
         </template>
         buy a new car (-${{ store.carCost }})
       </n-button> 
-      <template v-if="'car' in store.posessions">
+      <n-button v-if="store.money >= 500000" :disabled="store.spaceshipCost > store.money" @click="buySpaceship">
+        <template #icon>
+          <n-icon>
+            <rocket-outline />
+          </n-icon>
+        </template>
+        buy a spaceship (-${{ store.spaceshipCost }})
+      </n-button> 
+      <template v-if="Object.keys(store.posessions).length > 0">
         <p v-for="[k, v] in Object.entries(store.posessions)" :key="k">
           {{ k }}: {{ v }}
         </p>

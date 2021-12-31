@@ -16,6 +16,10 @@ const defaultMenu = [
     label: 'the gym',
     key: 'the gym',
     disabled: true
+  }, {
+    label: 'the stars',
+    key: 'the stars',
+    disabled: true
   }
 ]
 
@@ -24,7 +28,7 @@ const defaultCars = ['1993 Ford Aspire', '2020 Subaru BRZ', 'Lamborghini Aventad
 export const useStore = defineStore('main', {
   // arrow function recommended for full type inference
   state: () => {
-    const localStorageSave = localStorage.getItem('savev2')
+    const localStorageSave = localStorage.getItem('savev3')
     const savedState = localStorageSave 
       ? JSON.parse(localStorageSave)
       : undefined
@@ -35,6 +39,7 @@ export const useStore = defineStore('main', {
       pay: savedState?.pay || new Decimal(100),
       payIncrementType: savedState?.payIncrementType || 'sqrt',
       carCost: savedState?.carCost || 500,
+      spaceshipCost: savedState?.spaceshipCost || 1000000,
       cars: savedState?.cars || defaultCars,
       strength: savedState?.strength || 0,
       gainz: savedState?.gainz || 1,
@@ -56,6 +61,8 @@ export const useStore = defineStore('main', {
       menuOptions: savedState?.menuOptions || defaultMenu,
       showDeathModal: savedState?.showDeathModal || false,
       playerAutoSkill: savedState?.playerAutoSkill || 0,
+      planetsAvailable: savedState?.planetsAvailable || 60,
+      currentPlanet: savedState?.currentPlanet || 0,
       aiMovementRoutineStarted: false,
       playerMovementRoutineStarted: false,
       starSpawnerStarted: false,
@@ -63,12 +70,13 @@ export const useStore = defineStore('main', {
   },
   actions: {
     save () {
-      localStorage.setItem('savev2', JSON.stringify({
+      localStorage.setItem('savev3', JSON.stringify({
         money: this.money,
         lastMoney: this.lastMoney,
         pay: this.pay,
         payIncrementType: this.payIncrementType,
         carCost: this.carCost,
+        spaceshipCost: this.spaceshipCost,
         cars: this.cars,
         strength: this.strength,
         gainz: this.gainz,
@@ -84,10 +92,12 @@ export const useStore = defineStore('main', {
         menuOptions: this.menuOptions,
         showDeathModal: this.showDeathModal,
         playerAutoSkill: this.playerAutoSkill,
+        planetsAvailable: this.planetsAvailable,
+        currentPlanet: this.currentPlanet,
       }))
     },
     reset () {
-      localStorage.removeItem('savev2')
+      localStorage.removeItem('savev3')
       this.$reset()
     },
   },
