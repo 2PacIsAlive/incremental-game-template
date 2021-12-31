@@ -1,23 +1,20 @@
 import { defineStore } from 'pinia'
 import { Decimal } from 'decimal.js'
 import { Incrementor, incrementors } from '../components/incrementors'
-import defaultMap from './maps/default'
+import { firstMap } from './maps'
 
 const defaultMenu = [
   {
     label: 'the pad',
     key: 'the pad',
-    icon: 'HomeOutline',
     disabled: false,
   }, {
     label: 'the streets',
     key: 'the streets',
-    icon: 'SkullOutline',
     disabled: true
   }, {
     label: 'the gym',
     key: 'the gym',
-    icon: 'BarbellOutline',
     disabled: true
   }
 ]
@@ -33,7 +30,7 @@ export const useStore = defineStore('main', {
       : undefined
     // all these properties will have their type inferred automatically
     return {
-      money: savedState?.money || new Decimal(0),
+      money: savedState?.money || new Decimal(999999),
       lastMoney: savedState?.lastMoney || new Decimal(0),
       pay: savedState?.pay || new Decimal(100),
       payIncrementType: savedState?.payIncrementType || 'sqrt',
@@ -51,14 +48,16 @@ export const useStore = defineStore('main', {
         : <Incrementor[]> [],
       lag: 0,
       displaySaved: false,
-      map: savedState?.map || defaultMap,
+      map: savedState?.map || firstMap,
       stars: savedState?.stars || 0,
       aiStars: savedState?.aiStars || 0,
       deaths: savedState?.deaths || 0,
       openScreen: savedState?.openScreen || 'the pad',
       menuOptions: savedState?.menuOptions || defaultMenu,
       showDeathModal: savedState?.showDeathModal || false,
+      playerAutoSkill: savedState?.playerAutoSkill || 0,
       aiMovementRoutineStarted: false,
+      playerMovementRoutineStarted: false,
       starSpawnerStarted: false,
     }
   },
@@ -84,6 +83,7 @@ export const useStore = defineStore('main', {
         openScreen: this.openScreen,
         menuOptions: this.menuOptions,
         showDeathModal: this.showDeathModal,
+        playerAutoSkill: this.playerAutoSkill,
       }))
     },
     reset () {

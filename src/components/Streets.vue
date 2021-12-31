@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref, watch, onActivated } from 'vue'
+import { computed, onUnmounted, ref, watch, onActivated, Ref } from 'vue'
 import { useStore } from '../store'
 import { storeToRefs } from 'pinia'
 import { useSound } from '@vueuse/sound'
 import sfx from '../assets/sfx.mp3'
-import { NSlider } from 'naive-ui'
+import { NButton, NSlider, NSpace, NLayout } from 'naive-ui'
 import { Decimal } from 'decimal.js'
+import { secondMap } from '../store/maps'
 
 const store = useStore()
 const { money } = storeToRefs(store)
@@ -16,6 +17,7 @@ const coloredMap = computed(() => {
     .replace(/\P/g, coloredSpace('P', '#09f8f6'))
     .replace(/\@/g, coloredSpace(player, '#36AD6AFF')) // TODO how to interpolate 
     .replace(/\C/g, coloredSpace(ai, 'red'))
+    .replace(/\?/g, coloredSpace(exit, 'fuchsia'))
     .replace(/\*/g, coloredSpace('*', '#b39700'))
 })
 
@@ -34,11 +36,16 @@ const width = 59
 const height = 31
 
 const exitSpace = 1798
-const exit = 'e'
+const exit = '?'
 
 const player = '@'
 const playerDefaultLocation = 1172
 const playerIllegalMoves: string[] = []
+const autoSkillMarks = {
+  0: 'lame',
+  50: 'kinda lit',
+  100: 'godmode'
+}
 
 const ai = 'C'
 const aiRegex = /C/g
@@ -53,7 +60,8 @@ const aiIllegalMoves: string[] = [
 const starSpawnInterval = 5000
 
 let lastAiDirection = 'D'
-const aiPath = ref([])
+const aiPath: Ref<number[]> = ref([])
+const playerPath: Ref<number[]> = ref([])
 
 window.addEventListener('keydown', doCommand)
 
@@ -120,8 +128,6 @@ function moveEntity (entity: string, current: number, next: number, isJump: bool
   } else {
     setSpace(entity, next)
     setSpace(' ', current) 
-  setSpace(' ', current)  
-    setSpace(' ', current) 
   }
 }
 
@@ -140,78 +146,93 @@ function findNextMove (entity: string, direction: string) {
   return { current, next, nextChar }
 }
 
+function doMovePlayer (current: number, next: number, nextChar: string): void {
+  console.log('tryna move player from', current, next, nextChar)
+  if (isLegalMove(nextChar, playerIllegalMoves)) {
+    if (isStar(nextChar)) {
+      store.stars += 1
+      store.money = Decimal.add(store.money, 100 * store.stars)
+      // @ts-ignore
+      play({id: 'star'})
+      if (playbackRate.value < 4) playbackRate.value += 0.001
+    }
+    let isJump = false
+    if (isPortal(nextChar)) {
+      isJump = true
+      next = nextPortal(nextChar)
+      // @ts-ignore
+      play({id: 'portal'})
+    }
+    if (isExit(nextChar)) nextMap()
+    else moveEntity(player, current, next, isJump)    
+  }
+}
+
 // TODO what is e type
 function doCommand(e: any) {
   const direction = directionKeys[String.fromCharCode(e.keyCode).toLowerCase()]
   if (direction) {
     let { current, next, nextChar } = findNextMove(player, direction)
-    if (isLegalMove(nextChar, playerIllegalMoves)) {
-      if (isStar(nextChar)) {
-        store.stars += 1
-        store.money = Decimal.add(store.money, 100 * store.stars)
-        // @ts-ignore
-        play({id: 'star'})
-        if (playbackRate.value < 4) playbackRate.value += 0.001
-      }
-      let isJump = false
-      if (isPortal(nextChar)) {
-        isJump = true
-        next = nextPortal(nextChar)
-        // @ts-ignore
-        play({id: 'portal'})
-      }
-      if (isExit(nextChar)) nextMap()
-      else moveEntity(player, current, next, isJump)    
-    }
+    doMovePlayer(current, next, nextChar)
   }
 }
 
 function nextMap () {
   // @ts-ignore
   play({id: 'nextMap'})
-  store.map = 
-`┌─────────────────────────────────────────────────────────┐
-│ P                                                     L │
-│                                                         │
-│                                                         │
-│                                                         │
-│                                                         │
-│                                                         │
-│                                                         │
-│                                                         │
-│                                                         │
-│                                                         │
-│                                                         │
-│                                                         │
-│                                                         │
-│                             @                           │
-│                                                         │
-│                                                         │
-│                                                         │
-│                                                         │
-│                                                         │
-│                                                         │
-│                                                         │
-│                                                         │
-│                                                         │
-│                                                         │
-│                                                         │
-│                                                         │
-│                                                         │
-│                                                         │
-│ p                                                       │
-└─────────────────────────────────────────────────────────┘`
+  store.map = secondMap
 }
 
 // TODO this is super flawed, need to find a better way of doing this
 function isAiPathAccurate (playerSpace: number) {
   if (aiPath.value.length < 1) return false
-  else return true // Math.abs(playerSpace - aiPath.value[0]) <= 100
+  else return Math.abs(playerSpace - aiPath.value[0]) <= 100
+}
+
+function findStars(aiSpace: number, playerSpace: number, avoidAi: boolean): number[] {
+  const availableStars = []
+  for(let i=0; i<store.map.length; i++) {
+    if (store.map[i] === "*") {
+      if (avoidAi && i >= aiSpace-100 && i <= aiSpace+100)
+        continue
+      else availableStars.push(i)
+    }
+  }
+  return availableStars.sort(function(a, b) {
+    return (Math.abs(a - playerSpace) < Math.abs(b - playerSpace) ? 1 : 1)
+  })
+
+}
+
+async function movePlayer() {
+  if (!store.playerMovementRoutineStarted) {
+    console.log('STARTING PLAYER MOVEMENT ROUTINE')
+    store.playerMovementRoutineStarted = true
+    while (store.playerMovementRoutineStarted) {
+      const avoidAi = store.playerAutoSkill > 33 
+      const aiSpace = store.map.indexOf(ai)
+      const playerSpace = store.map.indexOf(player)
+      // const stars = findStars(aiSpace, playerSpace, avoidAi)
+      while (playerPath.value.length === 0) {
+        await dijkstras(playerSpace, '*', 'player')
+        if (playerPath.value.length === 0)
+          await dijkstras(playerSpace, 'p', 'player')
+        if (playerPath.value.length === 0)
+          await dijkstras(playerSpace, 'P', 'player')
+      }
+      const next = playerPath.value.pop()
+      if (next) {
+        const nextChar = store.map[next]
+        doMovePlayer(playerSpace, next, nextChar)
+      }
+      await new Promise(resolve => setTimeout(resolve, 100-store.playerAutoSkill))
+    }
+  }
 }
 
 async function moveAi() {
   console.log('STARTING AI MOVEMENT ROUTINE')
-  while (aiExists) {
+  while (1==1) {
     store.aiMovementRoutineStarted = true
     // aiPath.value.forEach((space, i) => {
     //   if (i !== aiPath.value.length-1 && store.map[space] === ' ') setSpace('.', space)
@@ -232,7 +253,7 @@ async function moveAi() {
         nextChar = store.map[next]
       } else { // player has moved, need to find a new path
         aiSearching.value = true
-        const foundPath = await dijkstras(aiSpace, playerSpace)
+        const foundPath = await dijkstras(aiSpace, playerSpace, 'ai')
         if (foundPath && aiPath.value.length > 0) {
           aiSearching.value = false
           next = aiPath.value.pop()
@@ -250,6 +271,7 @@ async function moveAi() {
         // @ts-ignore
         play({id: 'death'})
         store.showDeathModal = true
+        store.playerMovementRoutineStarted = false
         // alert('YOU DIED')
         store.deaths += 1
         store.menuOptions[2].disabled = false
@@ -266,7 +288,7 @@ async function moveAi() {
       }
       await new Promise(resolve => setTimeout(resolve, 100 - aiSpeed.value))
     } else {
-      aiExists.value = false
+      spawnNewAi()
     }
   }
 }
@@ -275,6 +297,19 @@ function randomSpace(): number {
     const min = Math.ceil(width + 1)
     const max = Math.floor(store.map.length - width - 1)
     return Math.floor(Math.random() * (max - min + 1)) + min
+}
+
+function spawnNewAi(): void {
+  let foundAvailableSpace, space
+  let attempts = 0
+  while (!foundAvailableSpace && attempts < 1000) {
+    space = randomSpace()
+    if (store.map[space] === ' ') {
+      setSpace(ai, space)
+      foundAvailableSpace = true
+    }
+    attempts += 1
+  } 
 }
 
 function spawnNewStar(): void {
@@ -308,7 +343,8 @@ function getLegalNeighbors (space: number, nodes: any[]): any[] {
 //   return nodes.find((node: any) => node.explored)
 // }
 
-function savePath (endingNode: any): void {
+function savePath (endingNode: any, aiOrPlayer: string): void {
+  console.log('ending node of path for', aiOrPlayer, endingNode)
   let currentNode = endingNode
   const path: any[] = []
   while (currentNode.parent !== null) {
@@ -319,11 +355,18 @@ function savePath (endingNode: any): void {
       //   setSpace('!', currentNode.i)
     }
   }
-  // @ts-ignore TODO wut
-  aiPath.value = path
+  // gross..
+  if (aiOrPlayer === 'ai') {
+    // @ts-ignore
+    aiPath.value = path
+  } else {
+    console.log('saving player path', path)
+    // @ts-ignore
+    playerPath.value = path
+  }
 }
 
-async function dijkstras (startingSpace: number, destinationSpace: number): Promise<any> {
+async function dijkstras (startingSpace: number, destinationSpace: number | string, aiOrPlayer: string): Promise<any> {
   const nodes = store.map.split('')
     .map((space: string, i: number) => {
       return {
@@ -343,10 +386,13 @@ async function dijkstras (startingSpace: number, destinationSpace: number): Prom
       unexploredNodes.sort((a: any, b: any) => a.dist > b.dist ? 1 : -1)
       const currentNode = unexploredNodes[0]
       currentNode.explored = true
-      if (currentNode.i === destinationSpace) {
+      const reachedDestination = typeof destinationSpace === 'string' 
+        ? store.map[currentNode.i] === destinationSpace
+        : currentNode.i === destinationSpace
+      if (reachedDestination) {
         // console.log('found path!')
         // console.log(currentNode)
-        savePath(currentNode)
+        savePath(currentNode, aiOrPlayer)
         return true
       } else {
         const neighbors = getLegalNeighbors(currentNode.i, nodes)
@@ -366,8 +412,9 @@ async function dijkstras (startingSpace: number, destinationSpace: number): Prom
   }
 }
 
-watch(money, (money: number, prevMoney: number) => {
-  if (money >= 1000000 && prevMoney < 1000000)
+// TODO this needs to get moved somewhere global
+watch(money, (m: number, prevM: number) => {
+  if (m >= 1000000 && prevM < 1000000)
     setSpace(exit, exitSpace)
 })
 
@@ -379,10 +426,15 @@ if (!store.starSpawnerStarted) spawnNewStarsIntermittently()
   <div id="streets">
     <p v-if="aiExists && aiSearching">the <span style="color: red">cops</span> are looking for you</p>
     <p id="run" v-else-if="aiExists && !aiSearching">you should probably run</p>
-    <!-- <pre>{{store.map}}</pre> -->
     <pre v-html="coloredMap"></pre>
     <p>nab <span style="color: #b39700">stars</span> to earn dough (arrow keys or wasd)</p>
     <p>use <span style="color: #09f8f6">portals</span> to access other parts of the map</p>
+    auto-shred:
+    <n-button @click="movePlayer()" v-if="!store.playerMovementRoutineStarted" tertiary type="primary">enable</n-button>
+    <n-button @click="store.playerMovementRoutineStarted = false" v-else tertiary type="default">disable</n-button>
+    <div v-if="store.playerMovementRoutineStarted" id="autoSkillSliderDiv">
+      <n-slider v-model:value="store.playerAutoSkill" :marks="autoSkillMarks" step="mark" />
+    </div>
   </div>
   <!-- <p>deaths: {{store.deaths}}</p>
   <p>stars: {{store.stars}}</p>
@@ -399,12 +451,18 @@ if (!store.starSpawnerStarted) spawnNewStarsIntermittently()
 
 <style scoped>
 pre {
-  line-height: 1.2; 
+  line-height: 1; 
 }
 #streets {
   text-align: center; 
 }
 #run {
   color: red;
+}
+#autoSkillSliderDiv {
+  /* display: inline-block; */
+  margin: 0 auto;
+  /* padding: 3px; */
+  max-width: 33%;
 }
 </style>

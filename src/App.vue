@@ -4,16 +4,22 @@
 // @ts-ignore
 import Game from './components/Game.vue'
 import { useStore } from './store'
-import { darkTheme, NConfigProvider, NLoadingBarProvider, NGrid, NGi, NThemeEditor, NGlobalStyle, NModal, NButton, NCard, NNotificationProvider } from 'naive-ui'
+import { darkTheme, NConfigProvider, GlobalThemeOverrides, NLoadingBarProvider, NThemeEditor, NGlobalStyle, NModal, NButton, NCard, NMessageProvider } from 'naive-ui'
 
-const store = useStore()
+const store = useStore(),
+  themeOverrides: GlobalThemeOverrides = {
+    // "Notification": {
+    //   "width": "220px"
+    // }
+  }
+
 </script>
 
 <template>
 <n-theme-editor>
-  <n-config-provider :theme="darkTheme">
+  <n-config-provider :theme="darkTheme" :theme-overrides="themeOverrides">
     <n-loading-bar-provider>
-      <n-notification-provider>
+      <n-message-provider placement="top-right">
         <div class="app">
           <div id="content-wrap">
             <Game />
@@ -31,7 +37,7 @@ const store = useStore()
             </n-card>
           </n-modal>
         </div>
-      </n-notification-provider>
+      </n-message-provider>
     </n-loading-bar-provider>
     <n-global-style />
   </n-config-provider>

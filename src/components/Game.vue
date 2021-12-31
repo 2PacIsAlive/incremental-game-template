@@ -9,13 +9,12 @@ import Streets from './Streets.vue'
 import Pad from './Pad.vue'
 // @ts-ignore
 import Gym from './Gym.vue'
-import { NIcon, NSpace, NSwitch, NLayout, NLayoutSider, NMenu, useNotification } from 'naive-ui'
+import { NIcon, NSpace, NSwitch, NLayout, NLayoutSider, NMenu, useMessage } from 'naive-ui'
 import { HomeOutline, CaretDownOutline, SkullOutline, SubwayOutline, StorefrontOutline, BarbellOutline } from '@vicons/ionicons5'
-const icons = { HomeOutline, CaretDownOutline, SkullOutline, SubwayOutline, StorefrontOutline, BarbellOutline }
 
 const store = useStore(),
   collapsed = ref(false),
-  notification = useNotification(),
+  message = useMessage(),
   saveInterval = 20000
 
 function renderMenuLabel (option: any) {
@@ -25,16 +24,19 @@ function renderMenuLabel (option: any) {
 }
 
 function renderMenuIcon (option: any) {
+  let icon = HomeOutline
+  if (option.key === 'the streets') icon = SkullOutline
+  else if (option.key === 'the gym') icon = BarbellOutline
   return option.disabled
     ? false
     : h(NIcon, { onClick: function () { openScreen(option.label) } }, { default: () => 
       // @ts-ignore
-      h(icons[option.icon], { onClick: function () { openScreen(option.label) } }) 
+      h(icon, { onClick: function () { openScreen(option.label) } }) 
     }) 
 }
 
 function expandIcon () {
-  return h(NIcon, null, { default: () => h(icons.CaretDownOutline) })
+  return h(NIcon, null, { default: () => h(CaretDownOutline) })
 }
 
 function openScreen(tab: string): void {
@@ -51,13 +53,14 @@ function measureLag(): void {
 
 function saveGame(): void {
   store.save()
-  notification.info({
-    title: 'game saved',
-    // content: `game saved`,
-    meta: new Date().toLocaleTimeString(),
-    duration: 2500,
-    closable: true,
-  })
+  message.info('game saved')
+  // notification.info({
+  //   title: 'game saved',
+  //   // content: `game saved`,
+  //   meta: new Date().toLocaleTimeString(),
+  //   duration: 2500,
+  //   closable: true,
+  // })
   // store.displaySaved = true
   // setTimeout(() => store.displaySaved = false, 2000)
 }
@@ -123,6 +126,6 @@ gameLoop()
 }
 
 .game-screen {
-  margin-top: 5%
+  margin-top: 3%
 }
 </style>
