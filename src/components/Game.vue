@@ -1,17 +1,46 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { Component, h, onMounted, ref } from 'vue'
 import { Decimal } from 'decimal.js'
 import { Incrementor } from './incrementors'
 import { useStore } from '../store'
 // @ts-ignore
-import Map from './Map.vue'
+import Streets from './Streets.vue'
 // @ts-ignore
-import Count from './Count.vue'
-
-defineProps<{ something: string }>()
+import Pad from './Pad.vue'
+// @ts-ignore
+import Gym from './Gym.vue'
+// @ts-ignore
+import Space from './Space.vue'
+import { NIcon, NSpace, NSwitch, NLayout, NLayoutSider, NMenu, useMessage } from 'naive-ui'
+import { HomeOutline, CaretDownOutline, SkullOutline, SubwayOutline, StorefrontOutline, BarbellOutline, StarOutline } from '@vicons/ionicons5'
 
 const store = useStore(),
-  saveInterval = 10000
+  collapsed = ref(false),
+  message = useMessage(),
+  saveInterval = 20000
+
+function renderMenuLabel (option: any) {
+  return option.disabled
+    ? false
+    : h('h3', { onClick: function () { openScreen(option.label) } }, option.label)
+}
+
+function renderMenuIcon (option: any) {
+  let icon = HomeOutline
+  if (option.key === 'the streets') icon = SkullOutline
+  else if (option.key === 'the gym') icon = BarbellOutline
+  else if (option.key === 'the stars') icon = StarOutline
+  return option.disabled
+    ? false
+    : h(NIcon, { onClick: function () { openScreen(option.label) } }, { default: () => 
+      // @ts-ignore
+      h(icon, { onClick: function () { openScreen(option.label) } }) 
+    }) 
+}
+
+function expandIcon () {
+  return h(NIcon, null, { default: () => h(CaretDownOutline) })
+}
 
 function openScreen(tab: string): void {
   store.openScreen = tab
@@ -27,8 +56,16 @@ function measureLag(): void {
 
 function saveGame(): void {
   store.save()
-  store.displaySaved = true
-  setTimeout(() => store.displaySaved = false, 2000)
+  message.info('game saved')
+  // notification.info({
+  //   title: 'game saved',
+  //   // content: `game saved`,
+  //   meta: new Date().toLocaleTimeString(),
+  //   duration: 2500,
+  //   closable: true,
+  // })
+  // store.displaySaved = true
+  // setTimeout(() => store.displaySaved = false, 2000)
 }
 
 function saveGameIntermittently(): void {
@@ -37,9 +74,9 @@ function saveGameIntermittently(): void {
 
 async function gameLoop() {
   while (1==1) {
-    store.lastCount = store.count
+    store.lastMoney = store.money
     store.automators.forEach((automator: Incrementor) =>
-      store.count = automator(store.count as Decimal)
+      store.money = automator(store.money as Decimal)
     )
     await new Promise(resolve => setTimeout(resolve, 0))
   }
@@ -55,62 +92,44 @@ gameLoop()
 </script>
 
 <template>
-  <div class="sidenav">
-    <a href="#" @click="openScreen('count')">count</a>
-    <a href="#" @click="openScreen('map')">map</a>
-  </div>
-
-  <div class="main">
-    <Count v-if="store.openScreen === 'count'"/>
-    <Map v-else-if="store.openScreen === 'map'"/>
-    <div id="globalcontrols">
-      <button type="button" @click="saveGame">save</button>
-      <button class="button-with-margin" type="button" @click="store.reset">reset</button>
-    </div>
-  </div>
+  <n-space vertical>
+    <n-layout has-sider position="absolute">
+      <n-layout-sider
+        bordered
+        collapse-mode="width"
+        :collapsed-width="64"
+        :width="190"
+        :collapsed="collapsed"
+        show-trigger
+        @collapse="collapsed = true"
+        @expand="collapsed = false"
+      >
+        <n-menu
+          :collapsed="collapsed"
+          :collapsed-width="64"
+          :collapsed-icon-size="22"
+          :options="store.menuOptions"
+          :render-label="renderMenuLabel"
+          :render-icon="renderMenuIcon"
+          :expand-icon="expandIcon"
+        />
+      </n-layout-sider>
+      <n-layout>
+        <Pad class="game-screen" v-if="store.openScreen === 'the pad'" />
+        <Streets class="game-screen" v-else-if="store.openScreen === 'the streets'" />
+        <Gym class="game-screen" v-else-if="store.openScreen === 'the gym'" />
+        <Space class="game-screen" v-else-if="store.openScreen === 'the stars'" />
+      </n-layout>
+    </n-layout>
+  </n-space>
 </template>
 
 <style scoped>
-* {box-sizing: border-box}
-
-#globalcontrols {
-  padding-top: 10px;
-} 
-.sidenav {
-  height: 100%; /* Full-height: remove this if you want "auto" height */
-  width: 160px; /* Set the width of the sidebar */
-  position: fixed; /* Fixed Sidebar (stay in place on scroll) */
-  z-index: 1; /* Stay on top */
-  top: 0; /* Stay at the top */
-  left: 0;
-  text-align: left;
-  background-color: #111; /* Black */
-  overflow-x: hidden; /* Disable horizontal scroll */
-  padding-top: 20px;
+* {
+  box-sizing: border-box;
 }
 
-.sidenav a {
-  padding: 6px 8px 6px 16px;
-  text-decoration: none;
-  font-size: 25px;
-  color: #818181;
-  display: block;
-}
-
-/* When you mouse over the navigation links, change their color */
-.sidenav a:hover {
-  color: #f1f1f1;
-}
-
-/* Style page content */
-.main {
-  margin-left: 160px; /* Same as the width of the sidebar */
-  padding: 0px 10px;
-}
-
-/* On smaller screens, where height is less than 450px, change the style of the sidebar (less padding and a smaller font size) */
-@media screen and (max-height: 450px) {
-  .sidenav {padding-top: 15px;}
-  .sidenav a {font-size: 18px;}
+.game-screen {
+  margin-top: 3%
 }
 </style>
